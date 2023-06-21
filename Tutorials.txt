@@ -1,1 +1,0 @@
-https://www.upesy.com/blogs/tutorials/how-to-use-deep-sleep-on-esp32-to-reduce-power-consumption#

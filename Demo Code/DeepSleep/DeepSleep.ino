@@ -1,5 +1,9 @@
-#define uS_TO_S_FACTOR 1000000
-#define TIME_TO_SLEEP  5
+#include "esp_wifi.h"
+// Factor to convert seconds to micro seconds
+#define S_TO_uS_FACTOR 1000000
+
+// Time for system to be in deep sleep mode
+#define TIME_TO_SLEEP  10
 
 RTC_DATA_ATTR int bootCount = 0;
 
@@ -28,12 +32,15 @@ void setup(){
    print_wakeup_reason();
 
    //Timer Configuration
-   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * S_TO_uS_FACTOR);
    Serial.println("ESP32 wake-up in " + String(TIME_TO_SLEEP) + " seconds");
 
    // Go in Deep Sleep mode
    Serial.println("Goes into Deep Sleep mode");
    Serial.println("----------------------");
+   //esp_bluedroid_disable();
+   //esp_bt_controller_disable();
+   //esp_wifi_stop();
    delay(100);
    esp_deep_sleep_start();
    Serial.println("This will never be displayed");

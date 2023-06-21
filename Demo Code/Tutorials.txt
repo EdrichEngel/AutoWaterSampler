@@ -1,0 +1,3 @@
+https://www.upesy.com/blogs/tutorials/how-to-use-deep-sleep-on-esp32-to-reduce-power-consumption#
+https://www.electronicwings.com/esp32/ds18b20-sensor-interfacing-with-esp32
+https://dronebotworkshop.com/esp32-servo/
