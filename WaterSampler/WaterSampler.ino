@@ -2,6 +2,9 @@
 #include <ESP32Servo.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include "FS.h"
+#include "SD.h"
+#include "SPI.h"
 
 
 // Define Variables
@@ -12,6 +15,9 @@ float temperatureReading = 0;
 bool sdCardDetected = 0;
 bool sdCardDetectedPrev = 0;
 
+int cur = 0;
+
+String sdData; 
 // Define Constants
 
 static const byte onboardLedPin = 2;
@@ -33,10 +39,13 @@ static const byte portPos7 = 154;
 static const byte portPos8 = 180;
 
 // Define Functions
-byte servoDegrees(byte portNumber);
+int servoDegrees(byte portNumber);
 
 float getTurbidity(float rawADC);
 float getTemperature();
+
+void initSDCard();
+void appendFile(fs::FS &fs, const char * path, const char * message);
 
 // Define Objects
 Servo valveServo;                               // Create servo object
@@ -68,6 +77,8 @@ void setup() {
 
   // Starts up the temperature sensor's OneWire communication protocol
   temperatureSensor.begin();
+
+
 }
 
 
@@ -84,6 +95,7 @@ void loop() {
   if (sdCardDetected != sdCardDetectedPrev){
     if (sdCardDetected){
       Serial.println("SD Card Detected");
+      initSDCard();
     } else{
       Serial.println("SD Card Removed");
     }
@@ -97,8 +109,21 @@ void loop() {
   Serial.print("Temperature: ");
   Serial.println(temperatureReading);
 
+  if(sdCardDetected){
+    sdData = turbidityReading;
+    sdData += ",";
+    sdData += temperatureReading;
+    sdData += "\n";
+    appendFile(SD, "/Data.txt", sdData.c_str());
+  }
+
+  
+
 
   delay(5 * sToMs);
+  cur++;
+  valveServo.write(servoDegrees(cur));
+
 }
 
 
@@ -110,7 +135,7 @@ void loop() {
 
 
 
-byte servoDegrees(byte portNumber) {
+int servoDegrees(byte portNumber) {
 
   switch (portNumber) {
     case 1:
@@ -147,15 +172,54 @@ byte servoDegrees(byte portNumber) {
 // This function determines the turbidity in NTUs from the raw ADC value
 float getTurbidity(float rawADC) {
   float voltage;
-
+  float turb;
   // Convert the raw ADC value to the output voltage from the sensor
-  voltage = (rawADC * 5 / 4095.0);
-
+  voltage = (float)(rawADC * 5 / 4095.0*0.7015+0.8493);
+  Serial.println(voltage);
   // Convert the output voltage from the sensor to turbidity in NTUs
-  return (-1120.4 * voltage * voltage + 5742.3 * voltage - 4352.9);
+  turb = (-1120.4 * voltage * voltage + 5742.3 * voltage - 4352.9);
+  return turb;
 }
 
 float getTemperature() {
   temperatureSensor.requestTemperatures();
   return temperatureSensor.getTempCByIndex(0);
 }
+
+
+void initSDCard(){
+  uint8_t sdCardType = SD.cardType();
+  bool sdError = 0;
+
+  if(!SD.begin(32)){
+    Serial.println("SD Card Mount Failed");
+    sdError = 1;
+    return;
+  }
+  if(sdCardType == CARD_NONE){
+    Serial.println("No SD card attached");
+    sdError = 1;
+    return;
+  }
+
+}
+
+
+// Using function written for SD card example
+void appendFile(fs::FS &fs, const char * path, const char * message){
+  Serial.printf("Appending to file: %s\n", path);
+
+  File file = fs.open(path, FILE_APPEND);
+  if(!file){
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  if(file.print(message)){
+      Serial.println("Message appended");
+  } else {
+    Serial.println("Append failed");
+  }
+  file.close();
+}
+
+
