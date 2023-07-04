@@ -5,6 +5,7 @@
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
+#include "cmath"
 
 
 // Define Variables
@@ -15,13 +16,20 @@ float temperatureReading = 0;
 bool sdCardDetected = 0;
 bool sdCardDetectedPrev = 0;
 bool delayFlag = 0;
+bool fileCreatedOnStartup = 1;
+bool failedToReadFile = 0;
 
 int sampleCurrent = 1;
 int curDelay = 0;
 int frequency = 1000;
 int sampleCount = 0;
+int duplicateFileCount = 0;
+
+unsigned long Timer;
 
 byte sdInit = 0;
+byte state = 0;
+
 
 String sdDataWrite;
 String fileNameSettings = "/Settings.txt";
@@ -65,6 +73,7 @@ void readSettingsFile(fs::FS &fs, String path);
 void decodeSDString(String dataString);
 void splitStrings(String data);
 void writeGeneralInfoToSD();
+void duplicateFileDetected();
 
 // Define Objects
 Servo valveServo;                               // Create servo object
@@ -72,12 +81,25 @@ OneWire oneWire(temperaturePin);                // Create a OneWire object for t
 DallasTemperature temperatureSensor(&oneWire);  // Create a DallasTemperature object by using the DallasTemperature library
 
 
-void IRAM_ATTR function_ISR() {
-  // Content of the function
-  delayFlag = 0;
-  Serial.println("Interupt!");
+void IRAM_ATTR sdCardRemove() {
+ 
+  if (digitalRead(cardDetectPin) == 0) {
+    delayFlag = 0;
+    sampleCount = 0;
+    duplicateFileCount = 0;
+    fileCreatedOnStartup = 0;
+    state = 0;
+  } else {
+    delayFlag = 0;
+    duplicateFileCount = 0;
+    fileCreatedOnStartup = 0;
+  }
 }
-
+void IRAM_ATTR sdCardInsert() {
+  delayFlag = 0;
+  duplicateFileCount = 0;
+  fileCreatedOnStartup = 0;
+}
 
 void setup() {
   // Start Serial Communication
@@ -88,7 +110,9 @@ void setup() {
 
   // SD Card Breakout Board Setup
   pinMode(cardDetectPin, INPUT);
-  attachInterrupt(cardDetectPin, function_ISR, FALLING);
+  //attachInterrupt(cardDetectPin, sdCardRemove, FALLING);
+  // attachInterrupt(cardDetectPin, sdCardInsert, RISING);
+  attachInterrupt(cardDetectPin, sdCardRemove, CHANGE);
 
   // Allow allocation of timers
   ESP32PWM::allocateTimer(0);
@@ -125,9 +149,17 @@ void setup() {
 
 
 
+  while (testFileExistance(SD, fileNameData)) {
+    duplicateFileDetected();
+  }
+
   if (!testFileExistance(SD, fileNameData)) {
     Serial.println("Writing general info");
     writeGeneralInfoToSD();
+    state = 1;
+  } else {
+    Serial.println("Error while creating duplicate file.");
+    state = 0;
   }
 }
 
@@ -140,6 +172,12 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  if (sampleCount == 0){
+    state = 0;
+  } else{
+    state = 1;
+  }
   if ((sampleCurrent <= sampleCount) || (sampleCount == 0)) {
 
 
@@ -148,7 +186,7 @@ void loop() {
       sdCardDetected = digitalRead(cardDetectPin);
       digitalWrite(onboardLedPin, sdCardDetected);
 
-      if (sdCardDetected != sdCardDetectedPrev) {
+      if ((sdCardDetected != sdCardDetectedPrev)||(failedToReadFile)) {
         if (sdCardDetected) {
           Serial.println("SD Card Detected");
           if (sdCardDetected) {
@@ -199,13 +237,12 @@ void loop() {
 
       sampleCurrent++;
       delayFlag = 1;
+      Timer = millis();
 
     } else if (delayFlag == 1) {
 
-      if (curDelay < frequency) {
-        delay(100);
-        curDelay += 100;
-      } else {
+      if (millis() > (Timer + frequency)) {
+        // if the time has passed
         delayFlag = 0;
         curDelay = 0;
       }
@@ -215,6 +252,8 @@ void loop() {
       Serial.println("System has finished sampling");
     }
     sampleCount = -1;
+
+    //Serial.println("Stuck");
   }
 }
 
@@ -347,8 +386,10 @@ void readSettingsFile(fs::FS &fs, String path) {
   File file = fs.open(path.c_str());
   if (!file) {
     Serial.println("Failed to open file for reading");
+    failedToReadFile = 1;
     return;
   }
+  failedToReadFile = 0;
 
   while (file.available()) {
     sdDataRead = file.readString();
@@ -356,6 +397,12 @@ void readSettingsFile(fs::FS &fs, String path) {
     //Serial.print(sdDataRead);
   }
   file.close();
+
+  if (!fileCreatedOnStartup) {
+    while (testFileExistance(SD, fileNameData)) {
+      duplicateFileDetected();
+    }
+  }
 
   if (!testFileExistance(SD, fileNameData)) {
     Serial.println("Writing general info");
@@ -428,12 +475,12 @@ void decodeSDString(String dataString) {
       Serial.println(frequency);
     } else {
       if (strcmp(dataString.substring(0, 8).c_str(), "Location") == 0) {
-        sampleLocation = dataString.substring(9, dataString.length()-1);
+        sampleLocation = dataString.substring(9, dataString.length() - 1);
         Serial.print("Sample Location: ");
         Serial.println(sampleLocation);
       } else {
         if (strcmp(dataString.substring(0, 4).c_str(), "Date") == 0) {
-          sampleDate = dataString.substring(5, dataString.length()-1);
+          sampleDate = dataString.substring(5, dataString.length() - 1);
           Serial.print("Sample Date: ");
           Serial.println(sampleDate);
         } else {
@@ -481,5 +528,48 @@ void writeGeneralInfoToSD() {
   appendFile(SD, fileNameData, sdDataWrite);
   sdDataWrite = "SampleNumber,Turbidity,Temperature\n";
   appendFile(SD, fileNameData, sdDataWrite);
+}
 
+void duplicateFileDetected() {
+  byte extraChar = 0;
+  float temp = 0;
+
+  if (duplicateFileCount == 0) {
+    duplicateFileCount++;
+    fileNameData = fileNameData.substring(0, fileNameData.length() - 5);
+    fileNameData += "(";
+    fileNameData += duplicateFileCount;
+    fileNameData += ").txt";
+  } else {
+
+
+    temp = log10(duplicateFileCount);
+
+    extraChar = ceil(temp);
+
+    /* Serial.print("Dup file = ");
+    Serial.println(duplicateFileCount);
+
+    Serial.print("temp = ");
+    Serial.println(temp);
+    Serial.print("extra char = ");
+    Serial.println(extraChar);
+    Serial.print("pow = ");
+    Serial.println(pow(10,extraChar));*/
+
+    if (pow(10, extraChar) == duplicateFileCount) {
+      extraChar++;
+      // Serial.println("Special case");
+    }
+
+
+    fileNameData = fileNameData.substring(0, fileNameData.length() - 5 - extraChar);
+    duplicateFileCount++;
+    fileNameData += duplicateFileCount;
+    fileNameData += ").txt";
+  }
+  Serial.print("Duplicate file found: ");
+  Serial.println(duplicateFileCount);
+  Serial.println(fileNameData);
+  Serial.println("");
 }
