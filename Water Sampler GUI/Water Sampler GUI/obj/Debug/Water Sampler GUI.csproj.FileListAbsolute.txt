@@ -1,0 +1,14 @@
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\bin\Debug\Water Sampler GUI.exe.config
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\bin\Debug\Water Sampler GUI.exe
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\bin\Debug\Water Sampler GUI.pdb
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water Sampler GUI.csproj.AssemblyReference.cache
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water_Sampler_GUI.Form_Calibrate.resources
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water_Sampler_GUI.Form_Configure.resources
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water_Sampler_GUI.Form_Connect.resources
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water_Sampler_GUI.Form_Monitor.resources
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water_Sampler_GUI.Form_Welcome.resources
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water_Sampler_GUI.Properties.Resources.resources
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water Sampler GUI.csproj.GenerateResource.cache
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water Sampler GUI.csproj.CoreCompileInputs.cache
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water Sampler GUI.exe
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water Sampler GUI.pdb

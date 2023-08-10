@@ -1,6 +1,6 @@
 ﻿namespace Water_Sampler_GUI
 {
-    partial class Form1
+    partial class Form_Monitor
     {
         /// <summary>
         /// Required designer variable.
@@ -28,13 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.SuspendLayout();
+            // 
+            // Form_Monitor
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Form1";
+            this.Name = "Form_Monitor";
+            this.Text = "Monitor";
+            this.ResumeLayout(false);
+
         }
 
         #endregion
     }
 }
-
