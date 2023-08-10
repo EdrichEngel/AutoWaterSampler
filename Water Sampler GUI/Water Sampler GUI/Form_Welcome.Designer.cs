@@ -117,6 +117,7 @@
             this.btnConnect.TabIndex = 5;
             this.btnConnect.Text = "Connect";
             this.btnConnect.UseVisualStyleBackColor = true;
+            this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
             // 
             // panel1
             // 
@@ -188,6 +189,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Form_Welcome";
             this.Text = "Welcome";
+            this.Load += new System.EventHandler(this.Form_Welcome_Load);
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
 

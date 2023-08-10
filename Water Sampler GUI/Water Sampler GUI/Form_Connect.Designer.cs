@@ -28,13 +28,26 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.btnSave = new System.Windows.Forms.Button();
             this.SuspendLayout();
+            // 
+            // btnSave
+            // 
+            this.btnSave.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSave.Location = new System.Drawing.Point(622, 369);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(125, 40);
+            this.btnSave.TabIndex = 6;
+            this.btnSave.Text = "Save + Exit";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // Form_Connect
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnSave);
             this.Name = "Form_Connect";
             this.Text = "Connect";
             this.ResumeLayout(false);
@@ -42,5 +55,7 @@
         }
 
         #endregion
+
+        private System.Windows.Forms.Button btnSave;
     }
 }
