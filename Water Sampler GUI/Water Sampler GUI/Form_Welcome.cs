@@ -56,15 +56,14 @@ namespace Water_Sampler_GUI
 
             if (bConnected == true)
             {
-                MessageBox.Show("True", "TESTING");
-
+                //MessageBox.Show("True", "TESTING");
                 btnCalibrate.Enabled = true;
                 btnMonitor.Enabled = true;
                 btnConfigure.Enabled = true;
 
             } else
             {
-                MessageBox.Show("False", "TESTING");
+                //MessageBox.Show("False", "TESTING");
                 btnCalibrate.Enabled = false;
                 btnMonitor.Enabled = false;
                 btnConfigure.Enabled = false;
@@ -85,6 +84,38 @@ namespace Water_Sampler_GUI
             {
                 e.Cancel = true; // Cancel the form closing
             }
+        }
+
+        private void btnCalibrate_Click(object sender, EventArgs e)
+        {
+            Hide();
+            Form_Calibrate calibrateForm = new Form_Calibrate();
+            calibrateForm.ShowDialog();
+            calibrateForm = null;
+            Show();
+        }
+
+        private void btnMonitor_Click(object sender, EventArgs e)
+        {
+            Hide();
+            Form_Monitor monitorForm = new Form_Monitor();
+            monitorForm.ShowDialog();
+            monitorForm = null;
+            Show();
+        }
+
+        private void btnConfigure_Click(object sender, EventArgs e)
+        {
+            Hide();
+            Form_Configure configureForm = new Form_Configure();
+            configureForm.ShowDialog();
+            configureForm = null;
+            Show();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

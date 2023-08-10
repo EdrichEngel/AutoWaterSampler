@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -35,11 +36,14 @@
             this.label5 = new System.Windows.Forms.Label();
             this.btnConnect = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.btnCalibrate = new System.Windows.Forms.Button();
-            this.btnMonitor = new System.Windows.Forms.Button();
-            this.btnConfigure = new System.Windows.Forms.Button();
             this.btnExit = new System.Windows.Forms.Button();
+            this.btnConfigure = new System.Windows.Forms.Button();
+            this.btnMonitor = new System.Windows.Forms.Button();
+            this.btnCalibrate = new System.Windows.Forms.Button();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -48,12 +52,13 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.Font = new System.Drawing.Font("Arial Black", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(0, 20);
+            this.label1.Location = new System.Drawing.Point(10, 10);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(980, 70);
+            this.label1.Size = new System.Drawing.Size(818, 48);
             this.label1.TabIndex = 0;
             this.label1.Text = "Automatic Water Sampler for Research Purposes";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // label2
             // 
@@ -132,39 +137,6 @@
             this.panel1.Size = new System.Drawing.Size(940, 80);
             this.panel1.TabIndex = 6;
             // 
-            // btnCalibrate
-            // 
-            this.btnCalibrate.Enabled = false;
-            this.btnCalibrate.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCalibrate.Location = new System.Drawing.Point(229, 20);
-            this.btnCalibrate.Name = "btnCalibrate";
-            this.btnCalibrate.Size = new System.Drawing.Size(125, 40);
-            this.btnCalibrate.TabIndex = 6;
-            this.btnCalibrate.Text = "Calibrate";
-            this.btnCalibrate.UseVisualStyleBackColor = true;
-            // 
-            // btnMonitor
-            // 
-            this.btnMonitor.Enabled = false;
-            this.btnMonitor.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnMonitor.Location = new System.Drawing.Point(406, 20);
-            this.btnMonitor.Name = "btnMonitor";
-            this.btnMonitor.Size = new System.Drawing.Size(125, 40);
-            this.btnMonitor.TabIndex = 7;
-            this.btnMonitor.Text = "Monitor";
-            this.btnMonitor.UseVisualStyleBackColor = true;
-            // 
-            // btnConfigure
-            // 
-            this.btnConfigure.Enabled = false;
-            this.btnConfigure.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnConfigure.Location = new System.Drawing.Point(583, 20);
-            this.btnConfigure.Name = "btnConfigure";
-            this.btnConfigure.Size = new System.Drawing.Size(125, 40);
-            this.btnConfigure.TabIndex = 8;
-            this.btnConfigure.Text = "Configure";
-            this.btnConfigure.UseVisualStyleBackColor = true;
-            // 
             // btnExit
             // 
             this.btnExit.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -176,21 +148,71 @@
             this.btnExit.UseVisualStyleBackColor = true;
             this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
+            // btnConfigure
+            // 
+            this.btnConfigure.Enabled = false;
+            this.btnConfigure.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnConfigure.Location = new System.Drawing.Point(583, 20);
+            this.btnConfigure.Name = "btnConfigure";
+            this.btnConfigure.Size = new System.Drawing.Size(125, 40);
+            this.btnConfigure.TabIndex = 8;
+            this.btnConfigure.Text = "Configure";
+            this.btnConfigure.UseVisualStyleBackColor = true;
+            this.btnConfigure.Click += new System.EventHandler(this.btnConfigure_Click);
+            // 
+            // btnMonitor
+            // 
+            this.btnMonitor.Enabled = false;
+            this.btnMonitor.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnMonitor.Location = new System.Drawing.Point(406, 20);
+            this.btnMonitor.Name = "btnMonitor";
+            this.btnMonitor.Size = new System.Drawing.Size(125, 40);
+            this.btnMonitor.TabIndex = 7;
+            this.btnMonitor.Text = "Monitor";
+            this.btnMonitor.UseVisualStyleBackColor = true;
+            this.btnMonitor.Click += new System.EventHandler(this.btnMonitor_Click);
+            // 
+            // btnCalibrate
+            // 
+            this.btnCalibrate.Enabled = false;
+            this.btnCalibrate.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnCalibrate.Location = new System.Drawing.Point(229, 20);
+            this.btnCalibrate.Name = "btnCalibrate";
+            this.btnCalibrate.Size = new System.Drawing.Size(125, 40);
+            this.btnCalibrate.TabIndex = 6;
+            this.btnCalibrate.Text = "Calibrate";
+            this.btnCalibrate.UseVisualStyleBackColor = true;
+            this.btnCalibrate.Click += new System.EventHandler(this.btnCalibrate_Click);
+            // 
+            // panel2
+            // 
+            this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel2.Controls.Add(this.label1);
+            this.panel2.Location = new System.Drawing.Point(70, 20);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(840, 70);
+            this.panel2.TabIndex = 7;
+            // 
+            // serialPort1
+            // 
+            this.serialPort1.BaudRate = 115200;
+            // 
             // Form_Welcome
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(982, 473);
+            this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
             this.Name = "Form_Welcome";
             this.Text = "Welcome";
             this.Load += new System.EventHandler(this.Form_Welcome_Load);
             this.panel1.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -208,6 +230,8 @@
         private System.Windows.Forms.Button btnMonitor;
         private System.Windows.Forms.Button btnCalibrate;
         private System.Windows.Forms.Button btnExit;
+        private System.Windows.Forms.Panel panel2;
+        public System.IO.Ports.SerialPort serialPort1;
     }
 }
 

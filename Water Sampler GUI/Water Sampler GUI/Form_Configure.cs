@@ -16,5 +16,12 @@ namespace Water_Sampler_GUI
         {
             InitializeComponent();
         }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            Form_Welcome.bConnected = true;
+
+            this.Close();
+        }
     }
 }
