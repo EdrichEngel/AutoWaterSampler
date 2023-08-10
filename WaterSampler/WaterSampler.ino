@@ -19,7 +19,6 @@ bool delayFlag = 0;
 bool fileCreatedOnStartup = 1;
 bool failedToReadFile = 0;
 
-int sampleCurrent = 1;
 int curDelay = 0;
 int frequency = 1000;
 int sampleCount = 0;
@@ -38,6 +37,10 @@ String sampleLocation = "N/A";
 String sampleDate = "N/A";
 String sampleCountString = "N/A";
 
+RTC_DATA_ATTR int bootCycleCount = 0;
+RTC_DATA_ATTR int sampleCurrent = 1;
+
+esp_sleep_wakeup_cause_t wakeup_reason;
 
 // Define Constants
 
@@ -49,6 +52,8 @@ static const byte cardDetectPin = 34;
 
 
 static const int sToMs = 1000;
+static const int sToUs = 1000000;
+static const int msToUs = 1000;
 
 static const byte portPos1 = 0;
 static const byte portPos2 = 26;
@@ -74,6 +79,9 @@ void decodeSDString(String dataString);
 void splitStrings(String data);
 void writeGeneralInfoToSD();
 void duplicateFileDetected();
+void print_wakeup_reason();
+void startDeepSleep();
+void deepSleepSetup(int Time);
 
 // Define Objects
 Servo valveServo;                               // Create servo object
@@ -82,7 +90,7 @@ DallasTemperature temperatureSensor(&oneWire);  // Create a DallasTemperature ob
 
 
 void IRAM_ATTR sdCardRemove() {
- 
+
   if (digitalRead(cardDetectPin) == 0) {
     delayFlag = 0;
     sampleCount = 0;
@@ -104,6 +112,11 @@ void IRAM_ATTR sdCardInsert() {
 void setup() {
   // Start Serial Communication
   Serial.begin(115200);
+
+  //Print boot cycle number and the wakeup reason
+  Serial.println("Boot number: " + String(bootCycleCount));
+  print_wakeup_reason();
+
 
   // Onboard LED setup
   pinMode(onboardLedPin, OUTPUT);
@@ -148,19 +161,22 @@ void setup() {
   }
 
 
+  if (bootCycleCount == 0) {
+    while (testFileExistance(SD, fileNameData)) {
+      duplicateFileDetected();
+    }
 
-  while (testFileExistance(SD, fileNameData)) {
-    duplicateFileDetected();
+    if (!testFileExistance(SD, fileNameData)) {
+      Serial.println("Writing general info");
+      writeGeneralInfoToSD();
+      state = 1;
+    } else {
+      Serial.println("Error while creating duplicate file.");
+      state = 0;
+    }
   }
-
-  if (!testFileExistance(SD, fileNameData)) {
-    Serial.println("Writing general info");
-    writeGeneralInfoToSD();
-    state = 1;
-  } else {
-    Serial.println("Error while creating duplicate file.");
-    state = 0;
-  }
+  bootCycleCount++;
+  deepSleepSetup(frequency);
 }
 
 
@@ -173,85 +189,97 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if (sampleCount == 0){
+  if (sampleCount == 0) {
     state = 0;
-  } else{
+  } else {
     state = 1;
   }
   if ((sampleCurrent <= sampleCount) || (sampleCount == 0)) {
 
 
-    if (delayFlag == 0) {
+    //if (delayFlag == 0) {
 
-      sdCardDetected = digitalRead(cardDetectPin);
-      digitalWrite(onboardLedPin, sdCardDetected);
+    sdCardDetected = digitalRead(cardDetectPin);
+    digitalWrite(onboardLedPin, sdCardDetected);
 
-      if ((sdCardDetected != sdCardDetectedPrev)||(failedToReadFile)) {
+    if ((sdCardDetected != sdCardDetectedPrev) || (failedToReadFile)) {
+      if (sdCardDetected) {
+        Serial.println("SD Card Detected");
         if (sdCardDetected) {
-          Serial.println("SD Card Detected");
-          if (sdCardDetected) {
+          initSDCard();
+          if (!sdInit) {
+            delay(50);
             initSDCard();
-            if (!sdInit) {
-              delay(50);
-              initSDCard();
-            }
           }
-
-          if (sdInit) {
-            readSettingsFile(SD, fileNameSettings);
-            sampleCurrent = 1;
-          }
-        } else {
-          Serial.println("SD Card Removed");
-          frequency = 1000;
-          sdInit = 0;
-          sampleCurrent = 1;
-          sampleCount = 0;
         }
+
+        if (sdInit) {
+          readSettingsFile(SD, fileNameSettings);
+          sampleCurrent = 1;
+        }
+      } else {
+        Serial.println("SD Card Removed");
+        frequency = 1000;
+        sdInit = 0;
+        sampleCurrent = 1;
+        sampleCount = 0;
       }
-      sdCardDetectedPrev = sdCardDetected;
+    }
+    sdCardDetectedPrev = sdCardDetected;
 
-      turbidityReading = getTurbidity(analogRead(turbidityPin));
-      temperatureReading = getTemperature();
-      Serial.print("Sample ");
-      Serial.print(sampleCurrent);
-      Serial.print(" of ");
-      Serial.println(sampleCount);
-      Serial.print("Turbidity: ");
-      Serial.println(turbidityReading);
-      Serial.print("Temperature: ");
-      Serial.println(temperatureReading);
-      Serial.println(" ");
+    turbidityReading = getTurbidity(analogRead(turbidityPin));
+    temperatureReading = getTemperature();
+    Serial.print("Sample ");
+    Serial.print(sampleCurrent);
+    Serial.print(" of ");
+    Serial.println(sampleCount);
+    Serial.print("Turbidity: ");
+    Serial.println(turbidityReading);
+    Serial.print("Temperature: ");
+    Serial.println(temperatureReading);
+    Serial.println(" ");
 
-      if (sdInit) {
-        sdDataWrite = sampleCurrent;
-        sdDataWrite += ",";
-        sdDataWrite += turbidityReading;
-        sdDataWrite += ",";
-        sdDataWrite += temperatureReading;
-        sdDataWrite += "\n";
-        appendFile(SD, fileNameData, sdDataWrite.c_str());
-      } else if (!sdInit && sdCardDetected) {
-        initSDCard();
+    if (sdInit) {
+      sdDataWrite = sampleCurrent;
+      sdDataWrite += ",";
+      sdDataWrite += turbidityReading;
+      sdDataWrite += ",";
+      sdDataWrite += temperatureReading;
+      sdDataWrite += "\n";
+      appendFile(SD, fileNameData, sdDataWrite.c_str());
+    } else if (!sdInit && sdCardDetected) {
+      initSDCard();
+    }
+
+    sampleCurrent++;
+    delayFlag = 1;
+    Timer = millis();
+
+    if (sampleCurrent > sampleCount) {
+      if (sampleCount != -1) {
+        Serial.println("System has finished sampling");
       }
+      sampleCount = -1;
+      deepSleepSetup(-1);
+    }
 
-      sampleCurrent++;
-      delayFlag = 1;
-      Timer = millis();
+    startDeepSleep();
 
-    } else if (delayFlag == 1) {
+    /*} else if (delayFlag == 1) {
 
       if (millis() > (Timer + frequency)) {
         // if the time has passed
         delayFlag = 0;
         curDelay = 0;
       }
-    }
+    }*/
   } else {
     if (sampleCount != -1) {
       Serial.println("System has finished sampling");
     }
     sampleCount = -1;
+    deepSleepSetup(-1);
+    startDeepSleep();
 
     //Serial.println("Stuck");
   }
@@ -572,4 +600,37 @@ void duplicateFileDetected() {
   Serial.println(duplicateFileCount);
   Serial.println(fileNameData);
   Serial.println("");
+}
+
+void print_wakeup_reason() {
+  esp_sleep_wakeup_cause_t wakeup_reason;
+
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+
+  switch (wakeup_reason) {
+    case ESP_SLEEP_WAKEUP_EXT0: Serial.println("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1: Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER: Serial.println("Wakeup caused by timer"); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD: Serial.println("Wakeup caused by touchpad"); break;
+    case ESP_SLEEP_WAKEUP_ULP: Serial.println("Wakeup caused by ULP program"); break;
+    default: Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason); break;
+  }
+}
+
+
+void startDeepSleep() {
+  Serial.println("Going to sleep now");
+  delay(1000);
+  Serial.flush();
+  esp_deep_sleep_start();
+  Serial.println("This will never be printed");
+}
+
+void deepSleepSetup(int Time) {
+  if (Time != -1) {
+    esp_sleep_enable_timer_wakeup(Time * msToUs);
+    Serial.println("Setup ESP32 to sleep for every " + String(frequency / 1000) + " Seconds");
+  } else {
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
+  }
 }
