@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ namespace Water_Sampler_GUI
 {
     public partial class Form_Welcome : Form
     {
+
+        public SerialPort SerialPortInstance { get; private set; }
         public static bool bConnected;
 
         public Form_Welcome()
@@ -20,6 +23,9 @@ namespace Water_Sampler_GUI
             this.FormClosing += Form_Welcome_FormClosing;
 
             bConnected = false;
+
+            SerialPortInstance = new SerialPort("COM1", 115200);
+
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -49,7 +55,7 @@ namespace Water_Sampler_GUI
 
 
             Hide();
-            Form_Connect connectForm = new Form_Connect();
+            Form_Connect connectForm = new Form_Connect(this);
             connectForm.ShowDialog();
             connectForm = null;
             Show();
@@ -83,6 +89,10 @@ namespace Water_Sampler_GUI
             if (MessageBox.Show("Are you sure you want to close the form?", "Confirmation", MessageBoxButtons.YesNo) == DialogResult.No)
             {
                 e.Cancel = true; // Cancel the form closing
+            }
+            else
+            {
+                SerialPortInstance.Close();
             }
         }
 

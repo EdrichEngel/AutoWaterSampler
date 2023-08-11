@@ -17,14 +17,18 @@ namespace Water_Sampler_GUI
 
         private string[] ports;
         private bool portSelected = false;
+        private bool errorDetected = false;
 
+        private Form_Welcome _formWelcome;
 
-        public Form_Connect()
+        public Form_Connect(Form_Welcome formWelcome)
         {
             InitializeComponent();
 
 
             this.FormClosing += Form_Connect_FormClosing;
+
+            _formWelcome = formWelcome;
 
 
         }
@@ -48,6 +52,11 @@ namespace Water_Sampler_GUI
 
         private void btnScan_Click(object sender, EventArgs e)
         {
+            if (_formWelcome.SerialPortInstance.IsOpen)
+            {
+                _formWelcome.SerialPortInstance.Close();
+            }
+
             cmbxPort.SelectedIndex = -1;
             TextBoxWriteLine("Scanning All Communication Ports"); 
             ports = SerialPort.GetPortNames();
@@ -83,10 +92,38 @@ namespace Water_Sampler_GUI
         {
             if(portSelected == true)
             {
-                TextBoxWriteLine("Connecting to: " + cmbxPort.Items[cmbxPort.SelectedIndex]); 
-              
-                Form_Welcome.bConnected = true;
-                TextBoxWriteLine("Connection Successful");
+                errorDetected = false;
+                TextBoxWriteLine("Connecting to: " + cmbxPort.Items[cmbxPort.SelectedIndex]);
+
+
+                if (_formWelcome.SerialPortInstance.IsOpen)
+                {
+                    _formWelcome.SerialPortInstance.Close();
+                }
+
+
+                _formWelcome.SerialPortInstance.PortName = cmbxPort.Items[cmbxPort.SelectedIndex].ToString();
+                _formWelcome.SerialPortInstance.BaudRate = 115200;
+
+                try
+                {
+                    _formWelcome.SerialPortInstance.Open(); // Open the serial port
+                }
+                catch (Exception errorTemp)
+                {
+                    MessageBox.Show("Communication port cannot be opened. Error " + errorTemp.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    errorDetected = true;
+                }
+
+                if (!errorDetected)
+                {
+                    _formWelcome.SerialPortInstance.WriteLine("Data sent from Form_Connect");
+                    Form_Welcome.bConnected = true;
+                    TextBoxWriteLine("Connection Successful");
+                }
+
+
+
                
 
             }
