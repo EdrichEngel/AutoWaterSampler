@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.ActivationContext;
@@ -18,6 +19,8 @@ namespace Water_Sampler_GUI
         private string[] ports;
         private bool portSelected = false;
         private bool errorDetected = false;
+
+        private string _receivedData;
 
         private Form_Welcome _formWelcome;
 
@@ -35,14 +38,14 @@ namespace Water_Sampler_GUI
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            
+
 
             this.Close();
         }
 
         private void Form_Connect_FormClosing(Object sender, FormClosingEventArgs e)
         {
-          
+
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
@@ -58,7 +61,7 @@ namespace Water_Sampler_GUI
             }
 
             cmbxPort.SelectedIndex = -1;
-            TextBoxWriteLine("Scanning All Communication Ports"); 
+            TextBoxWriteLine("Scanning All Communication Ports");
             ports = SerialPort.GetPortNames();
             cmbxPort.Items.Clear();
             portSelected = false;
@@ -67,17 +70,17 @@ namespace Water_Sampler_GUI
                 cmbxPort.Items.Add(port);
             }
             TextBoxWriteLine("Scanning Complete");
-           
+
 
         }
 
         private void cmbxPort_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(cmbxPort.SelectedIndex != -1)
+            if (cmbxPort.SelectedIndex != -1)
             {
                 portSelected = true;
                 TextBoxWriteLine("Com Port: " + cmbxPort.Items[cmbxPort.SelectedIndex] + " selected");
-               
+
             }
             else
             {
@@ -90,7 +93,7 @@ namespace Water_Sampler_GUI
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-            if(portSelected == true)
+            if (portSelected == true)
             {
                 errorDetected = false;
                 TextBoxWriteLine("Connecting to: " + cmbxPort.Items[cmbxPort.SelectedIndex]);
@@ -108,6 +111,7 @@ namespace Water_Sampler_GUI
                 try
                 {
                     _formWelcome.SerialPortInstance.Open(); // Open the serial port
+                    TextBoxWriteLine("Connection Established");
                 }
                 catch (Exception errorTemp)
                 {
@@ -117,14 +121,25 @@ namespace Water_Sampler_GUI
 
                 if (!errorDetected)
                 {
-                    _formWelcome.SerialPortInstance.WriteLine("Data sent from Form_Connect");
-                    Form_Welcome.bConnected = true;
-                    TextBoxWriteLine("Connection Successful");
+
+                    if (confirmDevice())
+                    {
+                        TextBoxWriteLine("Device Confirmed");
+                        Form_Welcome.bConnected = true;
+                        TextBoxWriteLine("Connection Successful");
+                    }
+                    else
+                    {
+                        TextBoxWriteLine("Incompatible Device"); 
+                        MessageBox.Show("Incompatible Device Selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                        TextBoxWriteLine("Connection Unsuccessful");
+                    }
                 }
 
 
 
-               
+
 
             }
             else
@@ -143,6 +158,48 @@ namespace Water_Sampler_GUI
             string currentDateTime = DateTime.Now.ToString("HH:mm:ss");
             tbConsole.AppendText(currentDateTime + " | " + data);
             tbConsole.AppendText(Environment.NewLine);
+        }
+
+        private bool confirmDevice()
+        {
+
+
+            TextBoxWriteLine("Confirming Device");
+            _formWelcome.SerialPortInstance.WriteLine("Penny is a freeloader.");
+
+
+            _receivedData = null;
+            _formWelcome.SerialPortInstance.DataReceived += SerialPort_DataReceived;
+
+            // Wait for input for 3 seconds
+            bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(3));
+
+            _formWelcome.SerialPortInstance.DataReceived -= SerialPort_DataReceived;
+
+            if (success)
+            {
+                MessageBox.Show("Received data: " + _receivedData);
+            }
+            else
+            {
+                MessageBox.Show("No data received within 3 seconds.", "Error");
+            }
+
+            if(_receivedData == "No Spaces")
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            SerialPort serialPort = (SerialPort)sender;
+            _receivedData = serialPort.ReadLine();
         }
     }
 }
