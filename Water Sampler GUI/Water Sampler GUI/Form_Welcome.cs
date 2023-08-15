@@ -56,6 +56,9 @@ namespace Water_Sampler_GUI
 
             Hide();
             Form_Connect connectForm = new Form_Connect(this);
+
+     
+
             connectForm.ShowDialog();
             connectForm = null;
             Show();
@@ -66,6 +69,9 @@ namespace Water_Sampler_GUI
                 btnCalibrate.Enabled = true;
                 btnMonitor.Enabled = true;
                 btnConfigure.Enabled = true;
+                if (SerialPortInstance.IsOpen) { 
+                    SerialPortInstance.WriteLine("Hello.");
+                }
 
             } else
             {
@@ -99,7 +105,7 @@ namespace Water_Sampler_GUI
         private void btnCalibrate_Click(object sender, EventArgs e)
         {
             Hide();
-            Form_Calibrate calibrateForm = new Form_Calibrate();
+            Form_Calibrate calibrateForm = new Form_Calibrate(this);
             calibrateForm.ShowDialog();
             calibrateForm = null;
             Show();

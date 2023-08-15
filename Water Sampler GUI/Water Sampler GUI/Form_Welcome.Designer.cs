@@ -174,7 +174,6 @@
             // 
             // btnCalibrate
             // 
-            this.btnCalibrate.Enabled = false;
             this.btnCalibrate.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnCalibrate.Location = new System.Drawing.Point(229, 20);
             this.btnCalibrate.Name = "btnCalibrate";

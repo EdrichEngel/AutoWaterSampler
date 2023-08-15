@@ -34,6 +34,25 @@ namespace Water_Sampler_GUI
             _formWelcome = formWelcome;
 
 
+            if (_formWelcome.SerialPortInstance.IsOpen)
+            {
+                TextBoxWriteLine(_formWelcome.SerialPortInstance.PortName + " selected");
+                portSelected = true;
+                Form_Welcome.bConnected = true;
+                btnScan.Enabled = false;
+                btnConnect.Enabled = false;
+                btnDisconnect.Enabled = true;
+                btnRefresh.Enabled = true;
+
+            }
+            else
+            {
+                btnScan.Enabled = true;
+                btnConnect.Enabled = false;
+                btnDisconnect.Enabled = false;
+                btnRefresh.Enabled = false;
+            }
+
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -55,10 +74,10 @@ namespace Water_Sampler_GUI
 
         private void btnScan_Click(object sender, EventArgs e)
         {
-            if (_formWelcome.SerialPortInstance.IsOpen)
+           /* if (_formWelcome.SerialPortInstance.IsOpen)
             {
                 _formWelcome.SerialPortInstance.Close();
-            }
+            }*/
 
             cmbxPort.SelectedIndex = -1;
             TextBoxWriteLine("Scanning All Communication Ports");
@@ -79,7 +98,7 @@ namespace Water_Sampler_GUI
             if (cmbxPort.SelectedIndex != -1)
             {
                 portSelected = true;
-                TextBoxWriteLine("Com Port: " + cmbxPort.Items[cmbxPort.SelectedIndex] + " selected");
+                TextBoxWriteLine(cmbxPort.Items[cmbxPort.SelectedIndex] + " selected");
 
             }
             else
@@ -88,7 +107,6 @@ namespace Water_Sampler_GUI
             }
 
             btnConnect.Enabled = portSelected;
-            btnRefresh.Enabled = portSelected;
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
@@ -127,19 +145,21 @@ namespace Water_Sampler_GUI
                         TextBoxWriteLine("Device Confirmed");
                         Form_Welcome.bConnected = true;
                         TextBoxWriteLine("Connection Successful");
+                        btnConnect.Enabled = false;
+                        btnScan.Enabled = false;
+                        btnDisconnect.Enabled = true;
+                        btnRefresh.Enabled = true;
                     }
                     else
                     {
+                        Form_Welcome.bConnected = false;
+                        btnRefresh.Enabled = false;
                         TextBoxWriteLine("Incompatible Device"); 
                         MessageBox.Show("Incompatible Device Selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
+                        _formWelcome.SerialPortInstance.Close();
                         TextBoxWriteLine("Connection Unsuccessful");
                     }
                 }
-
-
-
-
 
             }
             else
@@ -150,7 +170,43 @@ namespace Water_Sampler_GUI
 
         private void Form_Connect_Load(object sender, EventArgs e)
         {
-            Form_Welcome.bConnected = false;
+             int portIndex = -1;
+
+            if (_formWelcome.SerialPortInstance.IsOpen)
+            {
+
+                Form_Welcome.bConnected = true;
+
+
+
+                cmbxPort.SelectedIndex = -1;
+                TextBoxWriteLine("Scanning All Communication Ports");
+                ports = SerialPort.GetPortNames();
+                cmbxPort.Items.Clear();
+                
+                foreach (string port in ports)
+                {
+                    cmbxPort.Items.Add(port);
+
+                    if(port != _formWelcome.SerialPortInstance.PortName)
+                    {
+                        portIndex++;
+                    }
+                }
+
+                cmbxPort.SelectedIndex = portIndex;
+
+                btnConnect.Enabled = false;
+                
+
+
+
+            }
+            else
+            {
+
+                Form_Welcome.bConnected = false;
+            }
         }
 
         private void TextBoxWriteLine(string data)
@@ -178,14 +234,18 @@ namespace Water_Sampler_GUI
 
             if (success)
             {
-                MessageBox.Show("Received data: " + _receivedData);
+             
             }
             else
             {
-                MessageBox.Show("No data received within 3 seconds.", "Error");
+                TextBoxWriteLine("No Repsonse from device");
+                MessageBox.Show("No Resoponse From Device.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+             
+                return false;
+                
             }
 
-            if(_receivedData == "No Spaces")
+            if (_receivedData == "No Spaces")
             {
                 return true;
             }
@@ -201,5 +261,20 @@ namespace Water_Sampler_GUI
             SerialPort serialPort = (SerialPort)sender;
             _receivedData = serialPort.ReadLine();
         }
+
+        private void bntDisconnect_Click(object sender, EventArgs e)
+        {
+            if (_formWelcome.SerialPortInstance.IsOpen)
+            {
+                _formWelcome.SerialPortInstance.Close();
+            }
+            Form_Welcome.bConnected = false;
+            btnConnect.Enabled = true;
+            btnScan.Enabled = true;
+            btnDisconnect.Enabled = false;
+            btnRefresh.Enabled = false;
+        }
+
+        
     }
 }
