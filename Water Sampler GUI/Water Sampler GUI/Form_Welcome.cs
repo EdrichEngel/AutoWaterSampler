@@ -105,6 +105,15 @@ namespace Water_Sampler_GUI
         private void btnCalibrate_Click(object sender, EventArgs e)
         {
             Hide();
+
+            // Delete this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            SerialPortInstance.Close();
+
+            SerialPortInstance.PortName = "COM1";
+            SerialPortInstance.BaudRate = 115200;
+            SerialPortInstance.Open(); // Open the serial port
+
+
             Form_Calibrate calibrateForm = new Form_Calibrate(this);
             calibrateForm.ShowDialog();
             calibrateForm = null;

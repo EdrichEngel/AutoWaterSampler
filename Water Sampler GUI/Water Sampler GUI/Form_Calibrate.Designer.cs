@@ -48,6 +48,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.lblFormula = new System.Windows.Forms.Label();
+            this.btnRead = new System.Windows.Forms.Button();
             this.panel3.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -58,7 +59,7 @@
             // btnExit
             // 
             this.btnExit.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnExit.Location = new System.Drawing.Point(703, 304);
+            this.btnExit.Location = new System.Drawing.Point(911, 306);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(125, 40);
             this.btnExit.TabIndex = 7;
@@ -69,12 +70,13 @@
             // panel3
             // 
             this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel3.Controls.Add(this.btnRead);
             this.panel3.Controls.Add(this.label2);
             this.panel3.Controls.Add(this.btnSave);
             this.panel3.Controls.Add(this.cmbxSensor);
-            this.panel3.Location = new System.Drawing.Point(164, 20);
+            this.panel3.Location = new System.Drawing.Point(225, 15);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(511, 54);
+            this.panel3.Size = new System.Drawing.Size(669, 54);
             this.panel3.TabIndex = 10;
             // 
             // label2
@@ -91,7 +93,7 @@
             // 
             this.btnSave.Enabled = false;
             this.btnSave.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSave.Location = new System.Drawing.Point(375, 6);
+            this.btnSave.Location = new System.Drawing.Point(526, 6);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(125, 40);
             this.btnSave.TabIndex = 12;
@@ -118,7 +120,7 @@
             this.panel2.Controls.Add(this.label1);
             this.panel2.Location = new System.Drawing.Point(20, 12);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(840, 70);
+            this.panel2.Size = new System.Drawing.Size(1048, 70);
             this.panel2.TabIndex = 11;
             // 
             // label1
@@ -129,7 +131,7 @@
             this.label1.Font = new System.Drawing.Font("Arial Black", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(10, 10);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(818, 48);
+            this.label1.Size = new System.Drawing.Size(1026, 48);
             this.label1.TabIndex = 0;
             this.label1.Text = "Calibrate Sensors";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -143,18 +145,18 @@
             this.panel1.Controls.Add(this.panel3);
             this.panel1.Location = new System.Drawing.Point(20, 100);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(840, 362);
+            this.panel1.Size = new System.Drawing.Size(1048, 362);
             this.panel1.TabIndex = 13;
             // 
             // tbConsoleCalibrate
             // 
             this.tbConsoleCalibrate.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbConsoleCalibrate.Location = new System.Drawing.Point(439, 89);
+            this.tbConsoleCalibrate.Location = new System.Drawing.Point(390, 89);
             this.tbConsoleCalibrate.Multiline = true;
             this.tbConsoleCalibrate.Name = "tbConsoleCalibrate";
             this.tbConsoleCalibrate.ReadOnly = true;
             this.tbConsoleCalibrate.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.tbConsoleCalibrate.Size = new System.Drawing.Size(353, 209);
+            this.tbConsoleCalibrate.Size = new System.Drawing.Size(646, 209);
             this.tbConsoleCalibrate.TabIndex = 12;
             // 
             // panel4
@@ -162,7 +164,7 @@
             this.panel4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel4.Controls.Add(this.panel5);
             this.panel4.Controls.Add(this.lblFormula);
-            this.panel4.Location = new System.Drawing.Point(42, 89);
+            this.panel4.Location = new System.Drawing.Point(12, 89);
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(372, 262);
             this.panel4.TabIndex = 11;
@@ -284,11 +286,23 @@
             this.lblFormula.Text = "Formula: Y = Coef_A*x + Coef_B";
             this.lblFormula.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // btnRead
+            // 
+            this.btnRead.Enabled = false;
+            this.btnRead.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnRead.Location = new System.Drawing.Point(384, 6);
+            this.btnRead.Name = "btnRead";
+            this.btnRead.Size = new System.Drawing.Size(125, 40);
+            this.btnRead.TabIndex = 13;
+            this.btnRead.Text = "Read Value";
+            this.btnRead.UseVisualStyleBackColor = true;
+            this.btnRead.Click += new System.EventHandler(this.btnRead_Click);
+            // 
             // Form_Calibrate
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(882, 473);
+            this.ClientSize = new System.Drawing.Size(1080, 473);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.panel2);
             this.Name = "Form_Calibrate";
@@ -327,5 +341,6 @@
         private System.Windows.Forms.TextBox tbCoefB;
         private System.Windows.Forms.TextBox tbCoefD;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Button btnRead;
     }
 }
