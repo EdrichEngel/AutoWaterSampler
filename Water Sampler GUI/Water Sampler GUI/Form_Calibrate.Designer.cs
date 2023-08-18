@@ -30,6 +30,7 @@
         {
             this.btnExit = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
+            this.btnRead = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.btnSave = new System.Windows.Forms.Button();
             this.cmbxSensor = new System.Windows.Forms.ComboBox();
@@ -48,7 +49,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.lblFormula = new System.Windows.Forms.Label();
-            this.btnRead = new System.Windows.Forms.Button();
             this.panel3.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -78,6 +78,18 @@
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(669, 54);
             this.panel3.TabIndex = 10;
+            // 
+            // btnRead
+            // 
+            this.btnRead.Enabled = false;
+            this.btnRead.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnRead.Location = new System.Drawing.Point(384, 6);
+            this.btnRead.Name = "btnRead";
+            this.btnRead.Size = new System.Drawing.Size(125, 40);
+            this.btnRead.TabIndex = 13;
+            this.btnRead.Text = "Read Value";
+            this.btnRead.UseVisualStyleBackColor = true;
+            this.btnRead.Click += new System.EventHandler(this.btnRead_Click);
             // 
             // label2
             // 
@@ -147,6 +159,7 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1048, 362);
             this.panel1.TabIndex = 13;
+            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             // 
             // tbConsoleCalibrate
             // 
@@ -285,18 +298,6 @@
             this.lblFormula.TabIndex = 1;
             this.lblFormula.Text = "Formula: Y = Coef_A*x + Coef_B";
             this.lblFormula.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // btnRead
-            // 
-            this.btnRead.Enabled = false;
-            this.btnRead.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRead.Location = new System.Drawing.Point(384, 6);
-            this.btnRead.Name = "btnRead";
-            this.btnRead.Size = new System.Drawing.Size(125, 40);
-            this.btnRead.TabIndex = 13;
-            this.btnRead.Text = "Read Value";
-            this.btnRead.UseVisualStyleBackColor = true;
-            this.btnRead.Click += new System.EventHandler(this.btnRead_Click);
             // 
             // Form_Calibrate
             // 

@@ -162,7 +162,6 @@
             // 
             // btnMonitor
             // 
-            this.btnMonitor.Enabled = false;
             this.btnMonitor.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnMonitor.Location = new System.Drawing.Point(406, 20);
             this.btnMonitor.Name = "btnMonitor";

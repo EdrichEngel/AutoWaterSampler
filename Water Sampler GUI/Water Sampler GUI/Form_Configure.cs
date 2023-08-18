@@ -12,9 +12,13 @@ namespace Water_Sampler_GUI
 {
     public partial class Form_Configure : Form
     {
-        public Form_Configure()
+
+        private Form_Welcome _formWelcome;
+
+        public Form_Configure(Form_Welcome formWelcome)
         {
             InitializeComponent();
+            _formWelcome = formWelcome;
         }
 
         private void btnSave_Click(object sender, EventArgs e)
