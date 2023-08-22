@@ -28,27 +28,29 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.btnSave = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.panel5 = new System.Windows.Forms.Panel();
+            this.lblSDUsedPercentage = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.lblSDUsed = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.lblSDCap = new System.Windows.Forms.Label();
+            this.lblSDCard = new System.Windows.Forms.Label();
+            this.lblBattery = new System.Windows.Forms.Label();
+            this.lblDate = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.lblDate = new System.Windows.Forms.Label();
-            this.lblBattery = new System.Windows.Forms.Label();
-            this.lblSDCard = new System.Windows.Forms.Label();
-            this.lblSDCap = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.lblTurb = new System.Windows.Forms.Label();
             this.lblTemp = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.label17 = new System.Windows.Forms.Label();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.panel2.SuspendLayout();
             this.panel5.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -90,9 +92,9 @@
             // panel5
             // 
             this.panel5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel5.Controls.Add(this.label16);
+            this.panel5.Controls.Add(this.lblSDUsedPercentage);
             this.panel5.Controls.Add(this.label17);
-            this.panel5.Controls.Add(this.label2);
+            this.panel5.Controls.Add(this.lblSDUsed);
             this.panel5.Controls.Add(this.label15);
             this.panel5.Controls.Add(this.lblSDCap);
             this.panel5.Controls.Add(this.lblSDCard);
@@ -106,6 +108,110 @@
             this.panel5.Name = "panel5";
             this.panel5.Size = new System.Drawing.Size(344, 315);
             this.panel5.TabIndex = 13;
+            // 
+            // lblSDUsedPercentage
+            // 
+            this.lblSDUsedPercentage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblSDUsedPercentage.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSDUsedPercentage.Location = new System.Drawing.Point(156, 266);
+            this.lblSDUsedPercentage.Name = "lblSDUsedPercentage";
+            this.lblSDUsedPercentage.Size = new System.Drawing.Size(165, 34);
+            this.lblSDUsedPercentage.TabIndex = 17;
+            this.lblSDUsedPercentage.Text = "25%";
+            this.lblSDUsedPercentage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label17
+            // 
+            this.label17.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label17.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label17.Location = new System.Drawing.Point(10, 266);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(140, 34);
+            this.label17.TabIndex = 16;
+            this.label17.Text = "SD % Used";
+            this.label17.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblSDUsed
+            // 
+            this.lblSDUsed.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblSDUsed.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSDUsed.Location = new System.Drawing.Point(156, 216);
+            this.lblSDUsed.Name = "lblSDUsed";
+            this.lblSDUsed.Size = new System.Drawing.Size(165, 34);
+            this.lblSDUsed.TabIndex = 15;
+            this.lblSDUsed.Text = "1GB";
+            this.lblSDUsed.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label15
+            // 
+            this.label15.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label15.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label15.Location = new System.Drawing.Point(10, 216);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(140, 34);
+            this.label15.TabIndex = 14;
+            this.label15.Text = "SD Used";
+            this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblSDCap
+            // 
+            this.lblSDCap.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblSDCap.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSDCap.Location = new System.Drawing.Point(156, 166);
+            this.lblSDCap.Name = "lblSDCap";
+            this.lblSDCap.Size = new System.Drawing.Size(165, 34);
+            this.lblSDCap.TabIndex = 13;
+            this.lblSDCap.Text = "4GB";
+            this.lblSDCap.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblSDCard
+            // 
+            this.lblSDCard.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblSDCard.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSDCard.Location = new System.Drawing.Point(156, 116);
+            this.lblSDCard.Name = "lblSDCard";
+            this.lblSDCard.Size = new System.Drawing.Size(165, 34);
+            this.lblSDCard.TabIndex = 12;
+            this.lblSDCard.Text = "Mounted";
+            this.lblSDCard.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblBattery
+            // 
+            this.lblBattery.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblBattery.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblBattery.Location = new System.Drawing.Point(156, 66);
+            this.lblBattery.Name = "lblBattery";
+            this.lblBattery.Size = new System.Drawing.Size(165, 34);
+            this.lblBattery.TabIndex = 11;
+            this.lblBattery.Text = "100%";
+            this.lblBattery.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblDate
+            // 
+            this.lblDate.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblDate.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDate.Location = new System.Drawing.Point(156, 16);
+            this.lblDate.Name = "lblDate";
+            this.lblDate.Size = new System.Drawing.Size(165, 34);
+            this.lblDate.TabIndex = 10;
+            this.lblDate.Text = "2023/08/17 16:42";
+            this.lblDate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label6
             // 
@@ -159,58 +265,6 @@
             this.label4.Text = "Battery";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // lblDate
-            // 
-            this.lblDate.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblDate.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblDate.Location = new System.Drawing.Point(156, 16);
-            this.lblDate.Name = "lblDate";
-            this.lblDate.Size = new System.Drawing.Size(165, 34);
-            this.lblDate.TabIndex = 10;
-            this.lblDate.Text = "2023/08/17 16:42";
-            this.lblDate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lblBattery
-            // 
-            this.lblBattery.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblBattery.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblBattery.Location = new System.Drawing.Point(156, 66);
-            this.lblBattery.Name = "lblBattery";
-            this.lblBattery.Size = new System.Drawing.Size(165, 34);
-            this.lblBattery.TabIndex = 11;
-            this.lblBattery.Text = "100%";
-            this.lblBattery.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lblSDCard
-            // 
-            this.lblSDCard.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblSDCard.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSDCard.Location = new System.Drawing.Point(156, 116);
-            this.lblSDCard.Name = "lblSDCard";
-            this.lblSDCard.Size = new System.Drawing.Size(165, 34);
-            this.lblSDCard.TabIndex = 12;
-            this.lblSDCard.Text = "Mounted";
-            this.lblSDCard.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lblSDCap
-            // 
-            this.lblSDCap.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblSDCap.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSDCap.Location = new System.Drawing.Point(156, 166);
-            this.lblSDCap.Name = "lblSDCap";
-            this.lblSDCap.Size = new System.Drawing.Size(165, 34);
-            this.lblSDCap.TabIndex = 13;
-            this.lblSDCap.Text = "4GB";
-            this.lblSDCap.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // panel1
             // 
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -220,7 +274,7 @@
             this.panel1.Controls.Add(this.label12);
             this.panel1.Location = new System.Drawing.Point(439, 130);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(344, 210);
+            this.panel1.Size = new System.Drawing.Size(344, 128);
             this.panel1.TabIndex = 14;
             // 
             // lblTurb
@@ -275,57 +329,10 @@
             this.label12.Text = "Temperature";
             this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // label2
+            // timer1
             // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label2.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(156, 216);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(165, 34);
-            this.label2.TabIndex = 15;
-            this.label2.Text = "1GB";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label15
-            // 
-            this.label15.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label15.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label15.Location = new System.Drawing.Point(10, 216);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(140, 34);
-            this.label15.TabIndex = 14;
-            this.label15.Text = "SD Used";
-            this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label16
-            // 
-            this.label16.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label16.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label16.Location = new System.Drawing.Point(156, 266);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(165, 34);
-            this.label16.TabIndex = 17;
-            this.label16.Text = "25%";
-            this.label16.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label17
-            // 
-            this.label17.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label17.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(10, 266);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(140, 34);
-            this.label17.TabIndex = 16;
-            this.label17.Text = "SD % Used";
-            this.label17.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.timer1.Interval = 500;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // Form_Monitor
             // 
@@ -364,9 +371,10 @@
         private System.Windows.Forms.Label lblTemp;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label lblSDUsed;
         private System.Windows.Forms.Label label15;
-        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label lblSDUsedPercentage;
         private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Timer timer1;
     }
 }

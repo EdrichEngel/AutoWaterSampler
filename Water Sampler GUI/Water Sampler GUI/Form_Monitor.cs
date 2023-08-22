@@ -9,11 +9,17 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
 
+using System.IO.Ports;
+
 namespace Water_Sampler_GUI
 {
     public partial class Form_Monitor : Form
     {
 
+       
+
+        private string _receivedData;
+        private bool _received = false;
         bool updateValues;
         private Form_Welcome _formWelcome;
 
@@ -21,24 +27,120 @@ namespace Water_Sampler_GUI
         {
             InitializeComponent();
             updateValues = true;
-            System.Threading.Timer timer = new System.Threading.Timer(UpdateCallback, null, 0, 1000);
-
+            timer1.Interval = 10000;
+            timer1.Enabled = true;
             _formWelcome = formWelcome;
 
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
+            timer1.Enabled = false;
             Form_Welcome.bConnected = true;
             this.Close();
         }
 
-        void UpdateCallback(object state)
+      
+
+        private void timer1_Tick(object sender, EventArgs e)
         {
-            if (updateValues == true)
+          
+              
+                _formWelcome.SerialPortInstance.WriteLine("MR#");
+
+
+
+                _receivedData = null;
+                _formWelcome.SerialPortInstance.DataReceived += SerialPort_DataReceived;
+
+                // Wait for input for 3 seconds
+                bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(3));
+
+                _formWelcome.SerialPortInstance.DataReceived -= SerialPort_DataReceived;
+
+                if (success)
+                {
+
+                    DecodeString();
+
+                }
+                else
+                {
+                    timer1.Enabled = false;
+                    MessageBox.Show("No Resoponse From Device.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+
+                    btnSave.PerformClick();
+
+
+
+                }
+        
+
+        }
+
+
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            SerialPort serialPort = (SerialPort)sender;
+            _receivedData = serialPort.ReadLine();
+
+            _received = true;
+
+
+
+            //TextBoxWriteLine(_receivedData);
+
+        }
+
+        public void DecodeString()
+        {
+            int stringLength = _receivedData.Length;
+            int nextPos = 0;
+            //string tempOutput;
+
+            // fix issue here. there is a bug on line 251 to 260
+
+            string temp = _receivedData.Substring(3, (stringLength - 3));
+
+            if (_receivedData[0] == 'M' && _receivedData[1] == 'W')
             {
-                _formWelcome.SerialPortInstance.WriteLine("M" + "#" +"0"+ "#");
-            }  
+
+                nextPos = temp.IndexOf('#');
+                lblDate.Text = temp.Substring(0, nextPos);
+                temp = temp.Substring(nextPos + 1, (temp.Length - nextPos - 1));
+
+                nextPos = temp.IndexOf('#');
+                lblBattery.Text = temp.Substring(0, nextPos);
+                temp = temp.Substring(nextPos + 1, (temp.Length - nextPos - 1));
+
+                nextPos = temp.IndexOf('#');
+                lblSDCard.Text = temp.Substring(0, nextPos);
+                temp = temp.Substring(nextPos + 1, (temp.Length - nextPos - 1));
+
+                nextPos = temp.IndexOf('#');
+                lblSDCap.Text = temp.Substring(0, nextPos);
+                temp = temp.Substring(nextPos + 1, (temp.Length - nextPos - 1));
+
+                nextPos = temp.IndexOf('#');
+                lblSDUsed.Text = temp.Substring(0, nextPos);
+                temp = temp.Substring(nextPos + 1, (temp.Length - nextPos - 1));
+
+                nextPos = temp.IndexOf('#');
+                lblSDUsedPercentage.Text = temp.Substring(0, nextPos);
+                temp = temp.Substring(nextPos + 1, (temp.Length - nextPos - 1));
+
+                nextPos = temp.IndexOf('#');
+                lblTemp.Text = temp.Substring(0, nextPos);
+                temp = temp.Substring(nextPos + 1, (temp.Length - nextPos - 1));
+
+                nextPos = temp.IndexOf('#');
+                lblTurb.Text = temp.Substring(0, nextPos);
+                //temp = temp.Substring(nextPos + 1, (temp.Length - nextPos - 1));
+
+
+            }
+            
         }
     }
 }
