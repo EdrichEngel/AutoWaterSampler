@@ -278,10 +278,10 @@ namespace Water_Sampler_GUI
             if (_receivedData[0] == 'S' && _receivedData[1] == 'R')
             {
                 nextPos = temp.IndexOf('#');
-                tempOutput = (temp.Substring(0, nextPos));
+                tempOutput = " \t " + (temp.Substring(0, nextPos));
                 temp = temp.Substring(nextPos + 1, (temp.Length - nextPos - 1));
 
-                tempOutput += " \t | ";
+                tempOutput += " \t | \t ";
 
                 nextPos = temp.IndexOf('#');
                 tempOutput += (temp.Substring(0, nextPos));
@@ -320,7 +320,7 @@ namespace Water_Sampler_GUI
             if (success)
             {
 
-                TextBoxWriteLine("Raw \t | Processed");
+                TextBoxWriteLine(" \t " + "Raw \t | \t Processed");
                 DecodeString();
 
             }

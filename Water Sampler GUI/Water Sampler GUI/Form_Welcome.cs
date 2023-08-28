@@ -70,7 +70,7 @@ namespace Water_Sampler_GUI
                 btnMonitor.Enabled = true;
                 btnConfigure.Enabled = true;
                 if (SerialPortInstance.IsOpen) { 
-                    SerialPortInstance.WriteLine("Hello.");
+                   // SerialPortInstance.WriteLine("Hello.");
                 }
 
             } else
@@ -107,13 +107,12 @@ namespace Water_Sampler_GUI
             Hide();
 
             // Delete this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            SerialPortInstance.Close();
+          /*  SerialPortInstance.Close();
 
             SerialPortInstance.PortName = "COM1";
             SerialPortInstance.BaudRate = 115200;
             SerialPortInstance.Open(); // Open the serial port
-
-
+          */
             Form_Calibrate calibrateForm = new Form_Calibrate(this);
             calibrateForm.ShowDialog();
             calibrateForm = null;
@@ -124,12 +123,12 @@ namespace Water_Sampler_GUI
         {
 
             // Delete this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            SerialPortInstance.Close();
+          /*  SerialPortInstance.Close();
 
             SerialPortInstance.PortName = "COM1";
             SerialPortInstance.BaudRate = 115200;
             SerialPortInstance.Open(); // Open the serial port
-
+          */
 
 
 
@@ -146,12 +145,12 @@ namespace Water_Sampler_GUI
         private void btnConfigure_Click(object sender, EventArgs e)
         {
             // Delete this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            SerialPortInstance.Close();
+          /*  SerialPortInstance.Close();
 
             SerialPortInstance.PortName = "COM1";
             SerialPortInstance.BaudRate = 115200;
             SerialPortInstance.Open(); // Open the serial port
-
+          */
 
 
 

@@ -150,6 +150,7 @@
             // 
             // btnConfigure
             // 
+            this.btnConfigure.Enabled = false;
             this.btnConfigure.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnConfigure.Location = new System.Drawing.Point(583, 20);
             this.btnConfigure.Name = "btnConfigure";
@@ -161,6 +162,7 @@
             // 
             // btnMonitor
             // 
+            this.btnMonitor.Enabled = false;
             this.btnMonitor.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnMonitor.Location = new System.Drawing.Point(406, 20);
             this.btnMonitor.Name = "btnMonitor";
@@ -172,6 +174,7 @@
             // 
             // btnCalibrate
             // 
+            this.btnCalibrate.Enabled = false;
             this.btnCalibrate.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnCalibrate.Location = new System.Drawing.Point(229, 20);
             this.btnCalibrate.Name = "btnCalibrate";
