@@ -150,7 +150,6 @@
             // 
             // btnConfigure
             // 
-            this.btnConfigure.Enabled = false;
             this.btnConfigure.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnConfigure.Location = new System.Drawing.Point(583, 20);
             this.btnConfigure.Name = "btnConfigure";

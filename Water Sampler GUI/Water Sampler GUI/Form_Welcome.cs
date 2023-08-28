@@ -145,6 +145,16 @@ namespace Water_Sampler_GUI
 
         private void btnConfigure_Click(object sender, EventArgs e)
         {
+            // Delete this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            SerialPortInstance.Close();
+
+            SerialPortInstance.PortName = "COM1";
+            SerialPortInstance.BaudRate = 115200;
+            SerialPortInstance.Open(); // Open the serial port
+
+
+
+
             Hide();
             Form_Configure configureForm = new Form_Configure(this);
             configureForm.ShowDialog();

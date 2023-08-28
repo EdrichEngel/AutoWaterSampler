@@ -26,10 +26,11 @@ namespace Water_Sampler_GUI
         public Form_Monitor(Form_Welcome formWelcome)
         {
             InitializeComponent();
+            _formWelcome = formWelcome;
             updateValues = true;
+            timerTickCode();
             timer1.Interval = 10000;
             timer1.Enabled = true;
-            _formWelcome = formWelcome;
 
         }
 
@@ -40,42 +41,50 @@ namespace Water_Sampler_GUI
             this.Close();
         }
 
-      
+
+        private void timerTickCode()
+        {
+            _formWelcome.SerialPortInstance.DiscardInBuffer();
+
+            _formWelcome.SerialPortInstance.WriteLine("MR#");
+
+
+
+            _receivedData = null;
+            _formWelcome.SerialPortInstance.DataReceived += SerialPort_DataReceived;
+
+            // Wait for input for 3 seconds
+            bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(3));
+
+            _formWelcome.SerialPortInstance.DataReceived -= SerialPort_DataReceived;
+
+            if (success)
+            {
+
+                DecodeString();
+
+            }
+            else
+            {
+                timer1.Enabled = false;
+                MessageBox.Show("No Resoponse From Device.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+
+                btnSave.PerformClick();
+
+
+
+            }
+
+        }
+
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-          
-              
-                _formWelcome.SerialPortInstance.WriteLine("MR#");
+
+            timerTickCode();
 
 
-
-                _receivedData = null;
-                _formWelcome.SerialPortInstance.DataReceived += SerialPort_DataReceived;
-
-                // Wait for input for 3 seconds
-                bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(3));
-
-                _formWelcome.SerialPortInstance.DataReceived -= SerialPort_DataReceived;
-
-                if (success)
-                {
-
-                    DecodeString();
-
-                }
-                else
-                {
-                    timer1.Enabled = false;
-                    MessageBox.Show("No Resoponse From Device.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-
-                    btnSave.PerformClick();
-
-
-
-                }
-        
 
         }
 
@@ -99,7 +108,7 @@ namespace Water_Sampler_GUI
             int nextPos = 0;
             //string tempOutput;
 
-            // fix issue here. there is a bug on line 251 to 260
+       
 
             string temp = _receivedData.Substring(3, (stringLength - 3));
 

@@ -301,6 +301,9 @@ namespace Water_Sampler_GUI
         private void btnRead_Click(object sender, EventArgs e)
         {
             TextBoxWriteLine("Reading Value From " + cmbxSensor.Items[cmbxSensor.SelectedIndex] + " Sensor");
+
+            _formWelcome.SerialPortInstance.DiscardInBuffer();
+
             _formWelcome.SerialPortInstance.WriteLine("S" + "#" + cmbxSensor.SelectedIndex);
 
 
