@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form_Welcome));
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -42,6 +43,7 @@
             this.btnCalibrate = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
+            this.btnData = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.SuspendLayout();
@@ -116,7 +118,7 @@
             // btnConnect
             // 
             this.btnConnect.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnConnect.Location = new System.Drawing.Point(52, 20);
+            this.btnConnect.Location = new System.Drawing.Point(27, 20);
             this.btnConnect.Name = "btnConnect";
             this.btnConnect.Size = new System.Drawing.Size(125, 40);
             this.btnConnect.TabIndex = 5;
@@ -127,6 +129,7 @@
             // panel1
             // 
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel1.Controls.Add(this.btnData);
             this.panel1.Controls.Add(this.btnExit);
             this.panel1.Controls.Add(this.btnConfigure);
             this.panel1.Controls.Add(this.btnMonitor);
@@ -140,7 +143,7 @@
             // btnExit
             // 
             this.btnExit.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnExit.Location = new System.Drawing.Point(760, 20);
+            this.btnExit.Location = new System.Drawing.Point(787, 20);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(125, 40);
             this.btnExit.TabIndex = 9;
@@ -152,7 +155,7 @@
             // 
             this.btnConfigure.Enabled = false;
             this.btnConfigure.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnConfigure.Location = new System.Drawing.Point(583, 20);
+            this.btnConfigure.Location = new System.Drawing.Point(635, 20);
             this.btnConfigure.Name = "btnConfigure";
             this.btnConfigure.Size = new System.Drawing.Size(125, 40);
             this.btnConfigure.TabIndex = 8;
@@ -164,7 +167,7 @@
             // 
             this.btnMonitor.Enabled = false;
             this.btnMonitor.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnMonitor.Location = new System.Drawing.Point(406, 20);
+            this.btnMonitor.Location = new System.Drawing.Point(331, 20);
             this.btnMonitor.Name = "btnMonitor";
             this.btnMonitor.Size = new System.Drawing.Size(125, 40);
             this.btnMonitor.TabIndex = 7;
@@ -176,7 +179,7 @@
             // 
             this.btnCalibrate.Enabled = false;
             this.btnCalibrate.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCalibrate.Location = new System.Drawing.Point(229, 20);
+            this.btnCalibrate.Location = new System.Drawing.Point(179, 20);
             this.btnCalibrate.Name = "btnCalibrate";
             this.btnCalibrate.Size = new System.Drawing.Size(125, 40);
             this.btnCalibrate.TabIndex = 6;
@@ -197,6 +200,17 @@
             // 
             this.serialPort1.BaudRate = 115200;
             // 
+            // btnData
+            // 
+            this.btnData.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnData.Location = new System.Drawing.Point(483, 20);
+            this.btnData.Name = "btnData";
+            this.btnData.Size = new System.Drawing.Size(125, 40);
+            this.btnData.TabIndex = 10;
+            this.btnData.Text = "Data";
+            this.btnData.UseVisualStyleBackColor = true;
+            this.btnData.Click += new System.EventHandler(this.btnData_Click);
+            // 
             // Form_Welcome
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -208,6 +222,7 @@
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form_Welcome";
             this.Text = "Welcome";
             this.Load += new System.EventHandler(this.Form_Welcome_Load);
@@ -232,6 +247,7 @@
         private System.Windows.Forms.Button btnExit;
         private System.Windows.Forms.Panel panel2;
         public System.IO.Ports.SerialPort serialPort1;
+        private System.Windows.Forms.Button btnData;
     }
 }
 

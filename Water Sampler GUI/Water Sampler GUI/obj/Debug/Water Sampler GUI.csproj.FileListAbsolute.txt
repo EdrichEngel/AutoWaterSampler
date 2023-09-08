@@ -12,3 +12,4 @@ C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Co
 C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water Sampler GUI.csproj.CoreCompileInputs.cache
 C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water Sampler GUI.exe
 C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water Sampler GUI.pdb
+C:\Users\hp pc\OneDrive\Documents\University\4th Year\Mechatronic Project 478\Code\Water Sampler GUI\Water Sampler GUI\obj\Debug\Water_Sampler_GUI.Form_Data.resources

@@ -49,6 +49,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.lblFormula = new System.Windows.Forms.Label();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.panel3.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -343,5 +344,6 @@
         private System.Windows.Forms.TextBox tbCoefD;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button btnRead;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
     }
 }
