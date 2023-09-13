@@ -110,6 +110,7 @@ namespace Water_Sampler_GUI
         {
             _formWelcome.SerialPortInstance.DiscardInBuffer();
             tbTextFile.Clear();
+
             _formWelcome.SerialPortInstance.WriteLine("DR#" + textFileName + "#");
             btnRead.Enabled = false;
             btnDownload.Enabled = false;
@@ -123,6 +124,7 @@ namespace Water_Sampler_GUI
 
             if (success)
             {
+               
                 DecodeStringTextFile();
 
             }
@@ -151,7 +153,7 @@ namespace Water_Sampler_GUI
 
             if (_receivedData[0] == 'D' && _receivedData[1] == 'W')
             {
-                
+                TextBoxWriteLine(textFileName);
                 while (temp.IndexOf('#') > 0)
                 {
                     nextPos = temp.IndexOf('#');

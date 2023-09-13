@@ -245,12 +245,13 @@ namespace Water_Sampler_GUI
                 
             }
 
-            if (_receivedData == "No Spaces")
+            if (_receivedData.Substring(0,9) == "No Spaces")
             {
                 return true;
             }
             else
             {
+                TextBoxWriteLine("Error: " + _receivedData);
                 return false;
             }
 
