@@ -28,7 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form_Configure));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.tbInterval = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.tbCount = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.tbLocation = new System.Windows.Forms.TextBox();
@@ -44,8 +47,6 @@
             this.btnDefault = new System.Windows.Forms.Button();
             this.btnPull = new System.Windows.Forms.Button();
             this.btnExit = new System.Windows.Forms.Button();
-            this.label6 = new System.Windows.Forms.Label();
-            this.tbInterval = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
@@ -68,6 +69,27 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(551, 328);
             this.panel1.TabIndex = 9;
+            // 
+            // tbInterval
+            // 
+            this.tbInterval.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbInterval.Location = new System.Drawing.Point(188, 236);
+            this.tbInterval.Name = "tbInterval";
+            this.tbInterval.Size = new System.Drawing.Size(333, 34);
+            this.tbInterval.TabIndex = 15;
+            // 
+            // label6
+            // 
+            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label6.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.Location = new System.Drawing.Point(12, 236);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(170, 34);
+            this.label6.TabIndex = 14;
+            this.label6.Text = "Sample Interval (s):";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // tbCount
             // 
@@ -231,27 +253,6 @@
             this.btnExit.UseVisualStyleBackColor = true;
             this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
-            // label6
-            // 
-            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label6.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(12, 236);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(170, 34);
-            this.label6.TabIndex = 14;
-            this.label6.Text = "Sample Interval (s):";
-            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tbInterval
-            // 
-            this.tbInterval.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbInterval.Location = new System.Drawing.Point(188, 236);
-            this.tbInterval.Name = "tbInterval";
-            this.tbInterval.Size = new System.Drawing.Size(333, 34);
-            this.tbInterval.TabIndex = 15;
-            // 
             // Form_Configure
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -260,6 +261,7 @@
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form_Configure";
             this.Text = "Configure";
             this.panel1.ResumeLayout(false);

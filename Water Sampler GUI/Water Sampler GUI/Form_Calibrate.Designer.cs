@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form_Calibrate));
             this.btnExit = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
             this.btnRead = new System.Windows.Forms.Button();
@@ -307,6 +308,7 @@
             this.ClientSize = new System.Drawing.Size(1080, 473);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.panel2);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form_Calibrate";
             this.Text = "Calibrate";
             this.panel3.ResumeLayout(false);

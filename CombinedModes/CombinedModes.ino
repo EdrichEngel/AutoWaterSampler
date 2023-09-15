@@ -30,6 +30,8 @@ float tempCoefB = 0;
 float turbCoefA = 0;
 float turbCoefB = 0;
 float turbCoefC = 0;
+float turbVal = 0;
+float tempVal = 0;
 
 bool sdCardDetected = 0;
 bool sdCardDetectedPrev = 0;
@@ -207,11 +209,11 @@ void setup() {
   deepSleepSetup(frequency);
 
   ReadCoefFile(SD,fileNameCoef);
-  Serial.println(tempCoefA);
+  /*Serial.println(tempCoefA);
   Serial.println(tempCoefB);
   Serial.println(turbCoefA);
   Serial.println(turbCoefB);
-  Serial.println(turbCoefC);
+  Serial.println(turbCoefC);*/
 }
 
 
@@ -295,7 +297,7 @@ float getTurbidity() {
   /* Serial.print("VOLTAGE: ");
   Serial.println(voltage);*/
   // Convert the output voltage from the sensor to turbidity in NTUs
-  turb = (-1120.4 * voltage * voltage + 5742.3 * voltage - 4352.9);
+  turb = (voltage);
   return turb;
 }
 
@@ -821,11 +823,38 @@ void guiNewCoefficients(){
 
 void guiReadSensorValue(){
 
+  String transmission = "SR#";
+
+
+
+  if (serialDataReceived.substring(2,3) == "0"){
+      //Temperature
+      transmission += getTempRawString();
+      transmission += "#";
+      transmission += getTempProcessed();
+      transmission += "#";
+
+
+
+  } else if ((serialDataReceived.substring(2,3) == "1")){
+    //Turbidity
+      transmission += getTurbRawString();
+      transmission += "#";
+      transmission += getTurbProcessed();
+      transmission += "#";
+  }
+
+  Serial.println(transmission);
 
 
 }
 
 void guiMonitor(){
+  String temp = "";
+
+  temp = getTempRawString();
+  temp = getTurbRawString();
+
   String transmissionString = "MW#";
   transmissionString += getTime();
   transmissionString += "#";
@@ -1413,9 +1442,10 @@ String getTurbProcessed(){
   char turbChar[100];
   String turbString;
 
-  turb = getTurbidity();
+  turb = turbVal;
 
-  processedTurb = turb*turbCoefA + turbCoefB;
+  processedTurb = turb*turb*turbCoefA + turbCoefB*turb + turbCoefC;
+  //processedTurb = turb;
   dtostrf(processedTurb, 4, 2, turbChar);
   turbString = turbChar;
 
@@ -1432,9 +1462,42 @@ String getTempProcessed(){
   char tempChar[100];
   String tempString;
 
-  temp = getTemperature();
+  temp = tempVal;
 
   processedTemp = temp*tempCoefA + tempCoefB;
+  dtostrf(processedTemp, 4, 2, tempChar);
+  tempString = tempChar;
+
+  return tempString;
+}
+
+String getTempRawString(){
+
+  float temp;
+  float processedTemp;
+  char tempChar[100];
+  String tempString;
+
+  temp = getTemperature();
+  tempVal = temp;
+
+  processedTemp = temp;
+  dtostrf(processedTemp, 4, 2, tempChar);
+  tempString = tempChar;
+
+  return tempString;
+}
+
+String getTurbRawString(){
+
+  float temp;
+  float processedTemp;
+  char tempChar[100];
+  String tempString;
+
+  temp = getTurbidity();
+  turbVal = temp;
+  processedTemp = temp;
   dtostrf(processedTemp, 4, 2, tempChar);
   tempString = tempChar;
 
