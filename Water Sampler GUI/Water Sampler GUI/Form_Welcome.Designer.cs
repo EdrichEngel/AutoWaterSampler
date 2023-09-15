@@ -37,13 +37,13 @@
             this.label5 = new System.Windows.Forms.Label();
             this.btnConnect = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnData = new System.Windows.Forms.Button();
             this.btnExit = new System.Windows.Forms.Button();
             this.btnConfigure = new System.Windows.Forms.Button();
             this.btnMonitor = new System.Windows.Forms.Button();
             this.btnCalibrate = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
-            this.btnData = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.SuspendLayout();
@@ -140,6 +140,18 @@
             this.panel1.Size = new System.Drawing.Size(940, 80);
             this.panel1.TabIndex = 6;
             // 
+            // btnData
+            // 
+            this.btnData.Enabled = false;
+            this.btnData.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnData.Location = new System.Drawing.Point(483, 20);
+            this.btnData.Name = "btnData";
+            this.btnData.Size = new System.Drawing.Size(125, 40);
+            this.btnData.TabIndex = 10;
+            this.btnData.Text = "Data";
+            this.btnData.UseVisualStyleBackColor = true;
+            this.btnData.Click += new System.EventHandler(this.btnData_Click);
+            // 
             // btnExit
             // 
             this.btnExit.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -199,17 +211,6 @@
             // serialPort1
             // 
             this.serialPort1.BaudRate = 115200;
-            // 
-            // btnData
-            // 
-            this.btnData.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnData.Location = new System.Drawing.Point(483, 20);
-            this.btnData.Name = "btnData";
-            this.btnData.Size = new System.Drawing.Size(125, 40);
-            this.btnData.TabIndex = 10;
-            this.btnData.Text = "Data";
-            this.btnData.UseVisualStyleBackColor = true;
-            this.btnData.Click += new System.EventHandler(this.btnData_Click);
             // 
             // Form_Welcome
             // 

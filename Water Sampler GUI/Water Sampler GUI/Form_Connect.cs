@@ -170,6 +170,7 @@ namespace Water_Sampler_GUI
 
         private void Form_Connect_Load(object sender, EventArgs e)
         {
+            bool temp = false;
              int portIndex = -1;
 
             if (_formWelcome.SerialPortInstance.IsOpen)
@@ -187,12 +188,27 @@ namespace Water_Sampler_GUI
                 foreach (string port in ports)
                 {
                     cmbxPort.Items.Add(port);
+                    
 
-                    if(port != _formWelcome.SerialPortInstance.PortName)
+                    if ((port != _formWelcome.SerialPortInstance.PortName)&&(temp == false))
                     {
                         portIndex++;
+
                     }
+                    else
+                    {
+                        if (temp == false)
+                        {
+                            portIndex++;
+                        }
+                        temp = true;
+                    }
+
+                    
                 }
+               
+
+               
 
                 cmbxPort.SelectedIndex = portIndex;
 

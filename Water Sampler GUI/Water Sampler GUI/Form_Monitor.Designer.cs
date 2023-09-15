@@ -106,7 +106,7 @@
             this.panel5.Controls.Add(this.label4);
             this.panel5.Location = new System.Drawing.Point(38, 100);
             this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(344, 315);
+            this.panel5.Size = new System.Drawing.Size(444, 315);
             this.panel5.TabIndex = 13;
             // 
             // lblSDUsedPercentage
@@ -117,7 +117,7 @@
             this.lblSDUsedPercentage.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSDUsedPercentage.Location = new System.Drawing.Point(156, 266);
             this.lblSDUsedPercentage.Name = "lblSDUsedPercentage";
-            this.lblSDUsedPercentage.Size = new System.Drawing.Size(165, 34);
+            this.lblSDUsedPercentage.Size = new System.Drawing.Size(265, 34);
             this.lblSDUsedPercentage.TabIndex = 17;
             this.lblSDUsedPercentage.Text = "25%";
             this.lblSDUsedPercentage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -143,7 +143,7 @@
             this.lblSDUsed.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSDUsed.Location = new System.Drawing.Point(156, 216);
             this.lblSDUsed.Name = "lblSDUsed";
-            this.lblSDUsed.Size = new System.Drawing.Size(165, 34);
+            this.lblSDUsed.Size = new System.Drawing.Size(265, 34);
             this.lblSDUsed.TabIndex = 15;
             this.lblSDUsed.Text = "1GB";
             this.lblSDUsed.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -169,7 +169,7 @@
             this.lblSDCap.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSDCap.Location = new System.Drawing.Point(156, 166);
             this.lblSDCap.Name = "lblSDCap";
-            this.lblSDCap.Size = new System.Drawing.Size(165, 34);
+            this.lblSDCap.Size = new System.Drawing.Size(265, 34);
             this.lblSDCap.TabIndex = 13;
             this.lblSDCap.Text = "4GB";
             this.lblSDCap.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -182,7 +182,7 @@
             this.lblSDCard.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSDCard.Location = new System.Drawing.Point(156, 116);
             this.lblSDCard.Name = "lblSDCard";
-            this.lblSDCard.Size = new System.Drawing.Size(165, 34);
+            this.lblSDCard.Size = new System.Drawing.Size(265, 34);
             this.lblSDCard.TabIndex = 12;
             this.lblSDCard.Text = "Mounted";
             this.lblSDCard.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -195,7 +195,7 @@
             this.lblBattery.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblBattery.Location = new System.Drawing.Point(156, 66);
             this.lblBattery.Name = "lblBattery";
-            this.lblBattery.Size = new System.Drawing.Size(165, 34);
+            this.lblBattery.Size = new System.Drawing.Size(265, 34);
             this.lblBattery.TabIndex = 11;
             this.lblBattery.Text = "100%";
             this.lblBattery.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -208,7 +208,7 @@
             this.lblDate.Font = new System.Drawing.Font("Arial Narrow", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDate.Location = new System.Drawing.Point(156, 16);
             this.lblDate.Name = "lblDate";
-            this.lblDate.Size = new System.Drawing.Size(165, 34);
+            this.lblDate.Size = new System.Drawing.Size(265, 34);
             this.lblDate.TabIndex = 10;
             this.lblDate.Text = "2023/08/17 16:42";
             this.lblDate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -272,7 +272,7 @@
             this.panel1.Controls.Add(this.lblTemp);
             this.panel1.Controls.Add(this.label11);
             this.panel1.Controls.Add(this.label12);
-            this.panel1.Location = new System.Drawing.Point(439, 130);
+            this.panel1.Location = new System.Drawing.Point(505, 123);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(344, 128);
             this.panel1.TabIndex = 14;

@@ -171,12 +171,12 @@ namespace Water_Sampler_GUI
         private void btnData_Click(object sender, EventArgs e)
         {
 
-              SerialPortInstance.Close();
+          /*    SerialPortInstance.Close();
 
             SerialPortInstance.PortName = "COM1";
             SerialPortInstance.BaudRate = 115200;
             SerialPortInstance.Open(); // Open the serial port
-          
+          */
 
 
             Hide();

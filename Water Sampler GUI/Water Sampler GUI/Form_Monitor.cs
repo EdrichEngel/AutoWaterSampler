@@ -29,7 +29,7 @@ namespace Water_Sampler_GUI
             _formWelcome = formWelcome;
             updateValues = true;
             timerTickCode();
-            timer1.Interval = 10000;
+            timer1.Interval = 1000;
             timer1.Enabled = true;
 
         }
