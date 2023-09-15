@@ -91,7 +91,7 @@ int servoDegrees(byte portNumber);
 
 bool testFileExistance(fs::FS &fs, String path);
 
-float getTurbidity(float rawADC);
+float getTurbidity();
 float getTemperature();
 
 void initSDCard();
@@ -205,6 +205,13 @@ void setup() {
   }
   bootCycleCount++;
   deepSleepSetup(frequency);
+
+  ReadCoefFile(SD,fileNameCoef);
+  Serial.println(tempCoefA);
+  Serial.println(tempCoefB);
+  Serial.println(turbCoefA);
+  Serial.println(turbCoefB);
+  Serial.println(turbCoefC);
 }
 
 
@@ -276,9 +283,10 @@ int servoDegrees(byte portNumber) {
 
 
 // This function determines the turbidity in NTUs from the raw ADC value
-float getTurbidity(float rawADC) {
+float getTurbidity() {
   float voltage;
   float turb;
+  float rawADC = analogRead(turbidityPin);
 
   //Serial.print("raw: ");
   //Serial.println(rawADC);
@@ -658,7 +666,7 @@ void collectionMode(){
 
     sdCardCheckDuringLoop();
 
-    turbidityReading = getTurbidity(analogRead(turbidityPin));
+    turbidityReading = getTurbidity();
     temperatureReading = getTemperature();
     Serial.print("Sample ");
     Serial.print(sampleCurrent);
@@ -813,6 +821,8 @@ void guiNewCoefficients(){
 
 void guiReadSensorValue(){
 
+
+
 }
 
 void guiMonitor(){
@@ -824,8 +834,11 @@ void guiMonitor(){
   transmissionString += getSDMonitorValues();
   transmissionString += "#";
   transmissionString += getTempProcessed();
+  
+ 
   transmissionString += "#";
   transmissionString += getTurbProcessed();
+ 
   transmissionString += "#";
 
   Serial.println(transmissionString);
@@ -1108,6 +1121,33 @@ void guiReadCoefFile(fs::FS &fs, String path) {
 
 }
 
+void ReadCoefFile(fs::FS &fs, String path) {
+
+  String incommingData;
+
+  //initSDCard();
+
+  //Serial.printf("Reading Settings From: %s\n", path.c_str());
+
+  File file = fs.open(path.c_str());
+  if (!file) {
+    //Serial.println("Failed to open file for reading");
+    failedToReadFile = 1;
+    
+  }
+  failedToReadFile = 0;
+
+  while (file.available()) {
+    incommingData = file.readStringUntil('\n');
+
+    readCoefFromFile(incommingData);
+    
+    
+  }
+  file.close();
+
+}
+
 void guiWriteCoefFile(fs::FS &fs, String path) {
 
   String incommingData;
@@ -1181,6 +1221,46 @@ void decodeCoefFile(String tempData, byte selectedSensor){
     }
 
   } 
+  
+}
+
+void readCoefFromFile(String tempData){
+  int nextPos;
+  String Sensor;  
+
+
+
+  //Serial.println(tempData);
+
+  nextPos = tempData.indexOf('#');
+  Sensor = tempData.substring(0, nextPos);
+  tempData = tempData.substring(nextPos + 1, (tempData.length()));
+
+
+    if(Sensor == "Temperature"){
+
+        nextPos = tempData.indexOf('#');
+        tempCoefA = tempData.substring(0, nextPos).toFloat();
+        tempData = tempData.substring(nextPos + 1, (tempData.length()));
+      
+        nextPos = tempData.indexOf('#');
+        tempCoefB = tempData.substring(0, nextPos).toFloat();
+
+    } else if (Sensor == "Turbidity"){
+        nextPos = tempData.indexOf('#');
+        turbCoefA = tempData.substring(0, nextPos).toFloat();
+        tempData = tempData.substring(nextPos + 1, (tempData.length()));
+      
+        nextPos = tempData.indexOf('#');
+        turbCoefB = tempData.substring(0, nextPos).toFloat();
+        tempData = tempData.substring(nextPos + 1, (tempData.length()));
+      
+        nextPos = tempData.indexOf('#');
+        turbCoefC = tempData.substring(0, nextPos).toFloat();
+
+    }
+
+  
   
 }
 
@@ -1328,7 +1408,18 @@ return temp;
 
 String getTurbProcessed(){
 
-return "N/A";
+  float turb;
+  float processedTurb;
+  char turbChar[100];
+  String turbString;
+
+  turb = getTurbidity();
+
+  processedTurb = turb*turbCoefA + turbCoefB;
+  dtostrf(processedTurb, 4, 2, turbChar);
+  turbString = turbChar;
+
+  return turbString;
 
 
 }
@@ -1336,6 +1427,16 @@ return "N/A";
 
 String getTempProcessed(){
 
-return "N/A";
+  float temp;
+  float processedTemp;
+  char tempChar[100];
+  String tempString;
 
+  temp = getTemperature();
+
+  processedTemp = temp*tempCoefA + tempCoefB;
+  dtostrf(processedTemp, 4, 2, tempChar);
+  tempString = tempChar;
+
+  return tempString;
 }
