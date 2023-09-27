@@ -98,6 +98,7 @@ int duplicateFileCount = 0;
 int operateStepNumber = 1;
 int flushStepNumber = 1;
 int measureStepNumber = 1;
+int storingStepNumber = 1;
 
 unsigned long timeNow = millis();
 unsigned long timePrev = millis();
@@ -357,6 +358,7 @@ void collectionMode() {
         break;
       case 4:
         sampleCurrent++;
+        operateStepNumber++;
         break;
     }
 
@@ -365,10 +367,17 @@ void collectionMode() {
 
 
 
-  } else {
+  } 
+
+  //if((operateStepNumber == 5) || ((sampleCurrent > sampleCount))){
+  if(operateStepNumber == 5){
+
+      // start deep sleep here...
+      Serial.println("Start deep Sleep..........");
+      delay(1000);
   }
 
-  // start deep sleep here...
+  
 }
 
 void flushSystem() {
@@ -460,8 +469,8 @@ void collectMeasurements() {
     if (readingDone == 0){
     
       turbiditySum += getTurbidity();
-      Serial.print("Turbidity: ");
-      Serial.println(readingNumberNow);
+    //  Serial.print("Turbidity: ");
+    //  Serial.println(readingNumberNow);
       readingNumberNow++;
       if (readingNumberNow >= numberOfReadings){
         readingDone = 1;
@@ -482,8 +491,8 @@ void collectMeasurements() {
     if (readingDone == 0){
     
       temperatureSum += getTemperature();
-      Serial.print("Temperature: ");
-      Serial.println(readingNumberNow);
+    //  Serial.print("Temperature: ");
+    //  Serial.println(readingNumberNow);
       readingNumberNow++;
       if (readingNumberNow >= numberOfReadings){
         readingDone = 1;
@@ -511,10 +520,37 @@ void collectMeasurements() {
   if (measureStepNumber == 10){
     operateStepNumber++;
     measureStepNumber = 1;
+    Serial.println("On to storing.....");
   }    
 }
 
 void storeSample() {
+
+  if (storingStepNumber == 1){
+    moveServo(servoValvePin, getStoragePortPos(), 0);
+    moveServo(servoPumpPin, servoPumpOpenPos, 30);
+    storingStepNumber++;
+  }
+  if (storingStepNumber == 2) {
+    digitalWrite(relayPump, HIGH);
+    timeNow = millis();
+    timePrev = timeNow;
+    storingStepNumber++;
+  }
+  if (storingStepNumber == 3) {
+    if ((timePrev + pumpDurationCollect) <= timeNow) {
+      digitalWrite(relayPump, LOW);
+      storingStepNumber++;
+    }
+  }
+  if (storingStepNumber == 4) {
+    moveServo(servoPumpPin, servoPumpClosePos, 30);
+    storingStepNumber++;
+  }
+  if (storingStepNumber == 5) {
+    operateStepNumber++;
+    storingStepNumber = 1;
+  }
 }
 
 void moveServo(byte pinNumber, byte position, byte delayBetween) {
