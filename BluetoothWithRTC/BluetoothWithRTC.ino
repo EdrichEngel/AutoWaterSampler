@@ -48,11 +48,15 @@ static const byte servoSumpOpenPos = 130;
 static const byte servoPumpClosePos = 90;
 static const byte servoPumpOpenPos = 130;
 
+static const byte numberOfReadings = 10;
+static const int delayBetweenReadings = 250;
 
 static const int pumpDurationFlush = 10000;
 static const int pumpDurationMeasure = 10000;
 static const int pumpDurationCollect = 10000;
 static const int drainDuration = 10000;
+
+
 
 // Define Variables
 float servoPos = 0;  // Variable to store the servo position
@@ -65,6 +69,10 @@ float turbCoefB = 0;
 float turbCoefC = 0;
 float turbVal = 0;
 float tempVal = 0;
+float temperatureSum;
+float turbiditySum;
+float temperatureAvg;
+float turbidityAvg;
 
 bool sdCardDetected = 0;
 bool sdCardDetectedPrev = 0;
@@ -80,6 +88,8 @@ byte servoPumpPos = servoPumpClosePos;
 byte servoValvePos = portPos1;
 byte sdInit = 0;
 byte state = 0;
+byte readingNumberNow = 0;
+byte readingDone = 0;
 
 int curDelay = 0;
 int interval = 1000;
@@ -87,6 +97,7 @@ int sampleCount = 0;
 int duplicateFileCount = 0;
 int operateStepNumber = 1;
 int flushStepNumber = 1;
+int measureStepNumber = 1;
 
 unsigned long timeNow = millis();
 unsigned long timePrev = millis();
@@ -108,6 +119,7 @@ String guiFrequencyText;
 String guiLocationText;
 String guiDateText;
 String guiSampleCountText;
+String timeOfSample;
 
 RTC_DATA_ATTR int bootCycleCount = 0;
 RTC_DATA_ATTR int sampleCurrent = 1;
@@ -363,15 +375,15 @@ void flushSystem() {
   if (flushStepNumber == 1) {
     //3.1.1 Close Sump Servo
     moveServo(servoSumpPin, servoSumpClosePos, 30);
-    delay(1000);
+    //delay(1000);
 
     //3.1.2 Move multiport valve
     moveServo(servoValvePin, getFlushPortPos(), 0);
-    delay(1000);
+    //delay(1000);
 
     //3.1.3 Open Pump Valve
     moveServo(servoPumpPin, servoPumpOpenPos, 30);
-    delay(1000);
+    //delay(1000);
 
     flushStepNumber++;
   }
@@ -411,10 +423,95 @@ void flushSystem() {
   if (flushStepNumber == 8) {
     flushStepNumber = 1;
     operateStepNumber++;
+    Serial.println("On to Measurements...");
   }
 }
 
 void collectMeasurements() {
+
+  if (measureStepNumber == 1){
+    moveServo(servoPumpPin, servoPumpOpenPos, 30);
+    measureStepNumber++;
+  } 
+  if (measureStepNumber == 2) {
+    digitalWrite(relayPump, HIGH);
+    timeNow = millis();
+    timePrev = timeNow;
+    measureStepNumber++;
+  }
+  if (measureStepNumber == 3) {
+    if ((timePrev + pumpDurationMeasure) <= timeNow) {
+      digitalWrite(relayPump, LOW);
+      measureStepNumber++;
+    }
+  }
+  if (measureStepNumber == 4) {
+    moveServo(servoPumpPin, servoPumpClosePos, 30);
+    measureStepNumber++;
+  }  
+  if (measureStepNumber == 5) {
+    timeOfSample = getTime();
+    measureStepNumber++;
+    turbiditySum = 0;
+    temperatureSum = 0;
+  }
+  if (measureStepNumber == 6){
+
+    if (readingDone == 0){
+    
+      turbiditySum += getTurbidity();
+      Serial.print("Turbidity: ");
+      Serial.println(readingNumberNow);
+      readingNumberNow++;
+      if (readingNumberNow >= numberOfReadings){
+        readingDone = 1;
+        turbidityReading = (float)(turbiditySum/numberOfReadings);
+        measureStepNumber++;
+        readingNumberNow = 0;
+        readingDone = 0;
+      } else{
+      delay(delayBetweenReadings);
+      }
+    }
+    
+    
+    
+  }
+ if (measureStepNumber == 7){
+
+    if (readingDone == 0){
+    
+      temperatureSum += getTemperature();
+      Serial.print("Temperature: ");
+      Serial.println(readingNumberNow);
+      readingNumberNow++;
+      if (readingNumberNow >= numberOfReadings){
+        readingDone = 1;
+        temperatureReading = (float)(temperatureSum/numberOfReadings);
+        measureStepNumber++;
+         readingDone = 0;
+    readingNumberNow = 0;
+      } else{
+      delay(delayBetweenReadings);
+      }
+    }
+   
+   
+  }
+   if (measureStepNumber == 8){
+
+    // Save to SD Card................................................................................................................................................
+
+    measureStepNumber++;
+  } 
+  if (measureStepNumber == 9){
+    moveServo(servoSumpPin, servoSumpOpenPos, 30);
+    measureStepNumber++;
+  }
+  if (measureStepNumber == 10){
+    operateStepNumber++;
+    measureStepNumber = 1;
+  }    
 }
 
 void storeSample() {
