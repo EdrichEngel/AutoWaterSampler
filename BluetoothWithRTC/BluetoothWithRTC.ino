@@ -6,22 +6,53 @@
 #include "SD.h"
 #include "SPI.h"
 #include "cmath"
-#include <Wire.h>           // Include the Wire library for I2C communication
-#include "RTClib.h"         // Include the RTC library
+#include <Wire.h>    // Include the Wire library for I2C communication
+#include "RTClib.h"  // Include the RTC library
+#include "BluetoothSerial.h"
 
-#define pinSwitchMode 10 // Change.......................................................................................
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
 
 #define onboardLedPin 2
 #define temperaturePin 4
-#define servoPin 13
-#define relayPump 26
+#define servoSumpPin 13
 #define relayPower 14
+#define servoPumpPin 25
+#define relayPump 26
 #define turbidityPin 27
+#define servoValvePin 33
 #define cardDetectPin 34
+#define pinSwitchMode 35
 
 #define sToMs 1000
 #define sToUs 1000000
 #define msToUs 1000
+
+byte sendSetial = 1;
+
+// Define Constants
+static const byte portPos1 = 8;
+static const byte portPos2 = 35;
+static const byte portPos3 = 60;
+static const byte portPos4 = 84;
+static const byte portPos5 = 107;
+static const byte portPos6 = 132;
+static const byte portPos7 = 156;
+static const byte portPos8 = 180;
+
+
+static const byte servoSumpClosePos = 90;
+static const byte servoSumpOpenPos = 130;
+
+static const byte servoPumpClosePos = 90;
+static const byte servoPumpOpenPos = 130;
+
+
+static const int pumpDurationFlush = 10000;
+static const int pumpDurationMeasure = 10000;
+static const int pumpDurationCollect = 10000;
+static const int drainDuration = 10000;
 
 // Define Variables
 float servoPos = 0;  // Variable to store the servo position
@@ -43,16 +74,23 @@ bool failedToReadFile = 0;
 bool serialDataReceivedState = false;
 
 byte stateSwitchMode = 0;
-
-int curDelay = 0;
-int frequency = 1000;
-int sampleCount = 0;
-int duplicateFileCount = 0;
-
-unsigned long Timer;
-
+byte stateSwitchModePrev = 0;
+byte servoSumpPos = servoSumpClosePos;
+byte servoPumpPos = servoPumpClosePos;
+byte servoValvePos = portPos1;
 byte sdInit = 0;
 byte state = 0;
+
+int curDelay = 0;
+int interval = 1000;
+int sampleCount = 0;
+int duplicateFileCount = 0;
+int operateStepNumber = 1;
+int flushStepNumber = 1;
+
+unsigned long timeNow = millis();
+unsigned long timePrev = millis();
+
 
 
 String sdDataWrite;
@@ -80,15 +118,6 @@ esp_sleep_wakeup_cause_t wakeup_reason;
 
 
 
-// Define Constants
-static const byte portPos1 = 0;
-static const byte portPos2 = 26;
-static const byte portPos3 = 51;
-static const byte portPos4 = 77;
-static const byte portPos5 = 103;
-static const byte portPos6 = 129;
-static const byte portPos7 = 154;
-static const byte portPos8 = 180;
 
 // Define Functions
 int servoDegrees(byte portNumber);
@@ -112,12 +141,13 @@ void startDeepSleep();
 void deepSleepSetup(int Time);
 void IRAM_ATTR sdCardRemove();
 void sdCardCheckDuringLoop();
-void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
+void listDir(fs::FS &fs, const char *dirname, uint8_t levels);
 void deleteFile(fs::FS &fs, String path);
 void renameFile(fs::FS &fs, String path1, String path2);
 
 void monitorMode();
 void collectionMode();
+void collectionModeOLD();
 void readSerial();
 void guiReadCoefficients();
 void guiNewCoefficients();
@@ -133,50 +163,64 @@ void guiReadConfigFile(fs::FS &fs, String path);
 void DecodeNewConfig(String tempData);
 void createNewConfigFile();
 
+void flushSystem();
+void collectMeasurements();
+void storeSample();
+void moveServo(byte pinNumber, byte position, byte delayBetween);
+
 String readDataFile(fs::FS &fs, String path);
+byte getFlushPortPos();
+byte getStoragePortPos();
 
 // Define Objects
-Servo valveServo;                               // Create servo object
+Servo servoValve;  // Create servo object
+Servo servoPump;
+Servo servoSump;
 OneWire oneWire(temperaturePin);                // Create a OneWire object for the temperature sensor
 DallasTemperature temperatureSensor(&oneWire);  // Create a DallasTemperature object by using the DallasTemperature library
 RTC_DS3231 rtc;                                 // Create an RTC object
 
 
-
+BluetoothSerial SerialBT;
 
 void setup() {
 
 
- pinMode(relayPump, OUTPUT);
- pinMode(relayPower, OUTPUT);
+
+  pinMode(relayPump, OUTPUT);
+  pinMode(relayPower, OUTPUT);
 
   digitalWrite(relayPower, HIGH);
 
   // Start Serial Communication
   Serial.begin(115200);
+  SerialBT.begin("WaterSampler");  //Bluetooth device name
+  //Serial.println("The device started, now you can pair it with bluetooth!");
 
- Serial.println("Relay on");
-  delay(2000);
-  
-
-  Wire.begin();             // Start the I2C communication
+  delay(1000);
 
 
-  if (! rtc.begin()) {
+  Wire.begin();  // Start the I2C communication
+
+
+  if (!rtc.begin()) {
     Serial.println("Couldn't find RTC");
-    while (1);
+    while (1)
+      ;
   }
   if (rtc.lostPower()) {
-   // Serial.println("RTC lost power, lets set the time!");
-    
+    // Serial.println("RTC lost power, lets set the time!");
+
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
 
   //Print boot cycle number and the wakeup reason
- // Serial.println("Boot number: " + String(bootCycleCount));
+  // Serial.println("Boot number: " + String(bootCycleCount));
   print_wakeup_reason();
 
   pinMode(pinSwitchMode, INPUT);
+  stateSwitchMode = digitalRead(pinSwitchMode);
+  stateSwitchModePrev = stateSwitchMode;
 
   // Onboard LED setup
   pinMode(onboardLedPin, OUTPUT);
@@ -194,37 +238,44 @@ void setup() {
   ESP32PWM::allocateTimer(3);
 
   // Setup of servo
-  valveServo.setPeriodHertz(50);
-  valveServo.attach(servoPin, 500, 2500);
+  servoValve.setPeriodHertz(50);
+  servoSump.setPeriodHertz(50);
+  servoPump.setPeriodHertz(50);
+  servoValve.attach(servoValvePin, 500, 2500);
+  servoSump.attach(servoSumpPin, 500, 2500);
+  servoPump.attach(servoPumpPin, 500, 2500);
   // Moving servo to default position
-  valveServo.write(servoDegrees(0));
+  servoValve.write(servoValvePos);
+  servoSump.write(servoSumpPos);
+  servoPump.write(servoPumpPos);
 
   // Starts up the temperature sensor's OneWire communication protocol
   temperatureSensor.begin();
 
   setupSDCard();
 
- 
 
+  if (stateSwitchMode != 0) {
 
-  if (bootCycleCount == 0) {
-    while (testFileExistance(SD, fileNameData)) {
-      duplicateFileDetected();
+    if (bootCycleCount == 0) {
+      while (testFileExistance(SD, fileNameData)) {
+        duplicateFileDetected();
+      }
+
+      if (!testFileExistance(SD, fileNameData)) {
+        //Serial.println("Writing general info");
+        writeGeneralInfoToSD();
+        state = 1;
+      } else {
+        //Serial.println("Error while creating duplicate file.");
+        state = 0;
+      }
     }
-
-    if (!testFileExistance(SD, fileNameData)) {
-      //Serial.println("Writing general info");
-      writeGeneralInfoToSD();
-      state = 1;
-    } else {
-      //Serial.println("Error while creating duplicate file.");
-      state = 0;
-    }
+    bootCycleCount++;
+    deepSleepSetup(interval);
+    esp_sleep_enable_ext1_wakeup(1ULL << pinSwitchMode, ESP_EXT1_WAKEUP_ALL_LOW);
   }
-  bootCycleCount++;
-  deepSleepSetup(frequency);
-
-  ReadCoefFile(SD,fileNameCoef);
+  ReadCoefFile(SD, fileNameCoef);
   /*Serial.println(tempCoefA);
   Serial.println(tempCoefB);
   Serial.println(turbCoefA);
@@ -240,31 +291,283 @@ void setup() {
 
 
 void loop() {
-  // put your main code here, to run repeatedly:
- 
-    // Update stateSwitchMode here
-    //stateSwitchMode = digitalRead(pinSwitchMode);
-    stateSwitchMode = 0;
 
-    if (stateSwitchMode == 0){
+  timeNow = millis();
+  sampleCount = 0;
+  sampleCurrent = 1;
+  collectionMode();
+  // put your main code here, to run repeatedly:
+
+  // Update stateSwitchMode here
+
+
+
+  /*  stateSwitchModePrev = stateSwitchMode;
+  stateSwitchMode = digitalRead(pinSwitchMode);
+
+  if (stateSwitchModePrev != stateSwitchMode) {
+    Serial.println("Mode Change, Rebooting...");
+    ESP.restart();
+  } else {
+    if (stateSwitchMode == 0) {
       // Monitor Mode
-      monitorMode(); 
+      monitorMode();
+      //Serial.println("Monitor");
     } else {
       // Collection Mode
+      //Serial.println("Collection");
       collectionMode();
+    }
+    
+  }*/
+}
+
+void collectionMode() {
+
+  if (sampleCount == 0) {
+    // No SD card or Demo mode
+    state = 0;
+  } else {
+    state = 1;
+  }
+
+  if ((state == 0) || (sampleCurrent <= sampleCount)) {
+
+    switch (operateStepNumber) {
+      case 1:
+        flushSystem();
+        break;
+      case 2:
+        collectMeasurements();
+        break;
+      case 3:
+        storeSample();
+        break;
+      case 4:
+        sampleCurrent++;
+        break;
     }
 
 
+
+
+
+
+  } else {
+  }
+
+  // start deep sleep here...
+}
+
+void flushSystem() {
+  if (flushStepNumber == 1) {
+    //3.1.1 Close Sump Servo
+    moveServo(servoSumpPin, servoSumpClosePos, 30);
+    delay(1000);
+
+    //3.1.2 Move multiport valve
+    moveServo(servoValvePin, getFlushPortPos(), 0);
+    delay(1000);
+
+    //3.1.3 Open Pump Valve
+    moveServo(servoPumpPin, servoPumpOpenPos, 30);
+    delay(1000);
+
+    flushStepNumber++;
+  }
+  if (flushStepNumber == 2) {
+    digitalWrite(relayPump, HIGH);
+    timeNow = millis();
+    timePrev = timeNow;
+    flushStepNumber++;
+  }
+  if (flushStepNumber == 3) {
+    if ((timePrev + pumpDurationFlush) <= timeNow) {
+      digitalWrite(relayPump, LOW);
+      flushStepNumber++;
+    }
+  }
+  if (flushStepNumber == 4) {
+    moveServo(servoPumpPin, servoPumpClosePos, 30);
+    flushStepNumber++;
+  }
+  if (flushStepNumber == 5) {
+    moveServo(servoSumpPin, servoSumpOpenPos, 30);
+    timeNow = millis();
+    timePrev = timeNow;
+    flushStepNumber++;
+  }
+  if (flushStepNumber == 6) {
+    if (timePrev + drainDuration <= timeNow) {
+
+      flushStepNumber++;
+    }
+  }
+  if (flushStepNumber == 7) {
+    moveServo(servoSumpPin, servoSumpClosePos, 30);
+
+    flushStepNumber++;
+  }
+  if (flushStepNumber == 8) {
+    flushStepNumber = 1;
+    operateStepNumber++;
+  }
+}
+
+void collectMeasurements() {
+}
+
+void storeSample() {
+}
+
+void moveServo(byte pinNumber, byte position, byte delayBetween) {
+  byte servoPos = 0;
+
+  switch (pinNumber) {
+    case servoSumpPin:
+      servoPos = servoSumpPos;
+      break;
+    case servoPumpPin:
+      servoPos = servoPumpPos;
+      break;
+    case servoValvePin:
+      servoPos = servoValvePos;
+      break;
+  }
+
+  while (servoPos != position) {
+    if (position < servoPos) {
+      servoPos--;
+    }
+    if (position > servoPos) {
+      servoPos++;
+    }
+
+
+    switch (pinNumber) {
+      case servoSumpPin:
+        servoSumpPos = servoPos;
+        break;
+      case servoPumpPin:
+        servoPumpPos = servoPos;
+        break;
+      case servoValvePin:
+        servoValvePos = servoPos;
+        break;
+    }
+
+    servoValve.write(servoValvePos);
+    servoSump.write(servoSumpPos);
+    servoPump.write(servoPumpPos);
+
+    delay(delayBetween);
+  }
+}
+
+byte getFlushPortPos() {
+
+  switch (sampleCurrent) {
+    case 1:
+      return portPos1;
+    case 2:
+      return portPos3;
+    case 3:
+      return portPos5;
+    case 4:
+      return portPos7;
+  }
 }
 
 
+byte getStoragePortPos() {
+
+  switch (sampleCurrent) {
+    case 1:
+      return portPos2;
+    case 2:
+      return portPos4;
+    case 3:
+      return portPos6;
+    case 4:
+      return portPos8;
+  }
+}
+
+void collectionModeOLD() {
 
 
+  if (sampleCount == 0) {
+    state = 0;
+  } else {
+    state = 1;
+  }
+  if ((sampleCurrent <= sampleCount) || (sampleCount == 0)) {
 
 
+    //if (delayFlag == 0) {
 
+    sdCardCheckDuringLoop();
 
+    turbidityReading = getTurbidity();
+    temperatureReading = getTemperature();
+    /*Serial.print("Sample ");
+    Serial.print(sampleCurrent);
+    Serial.print(" of ");
+    Serial.println(sampleCount);
+    Serial.print("Turbidity: ");
+    Serial.println(turbidityReading);
+    Serial.print("Temperature: ");
+    Serial.println(temperatureReading);
+    Serial.println(" ");*/
 
+    if (sdInit) {
+      sdDataWrite = sampleCurrent;
+      sdDataWrite += ",";
+      sdDataWrite += getTime();
+      sdDataWrite += ",";
+      sdDataWrite += turbidityReading;
+      sdDataWrite += ",";
+      sdDataWrite += temperatureReading;
+      sdDataWrite += "\n";
+      appendFile(SD, fileNameData, sdDataWrite.c_str());
+    } else if (!sdInit && sdCardDetected) {
+      initSDCard();
+    }
+
+    sampleCurrent++;
+    delayFlag = 1;
+    timeNow = millis();
+
+    if (sampleCurrent > sampleCount) {
+      if (sampleCount != -1) {
+        //  Serial.println("System has finished sampling");
+      }
+      sampleCount = -1;
+      // Start indefinite sleep
+      deepSleepSetup(-1);
+    }
+
+    startDeepSleep();
+
+    /*} else if (delayFlag == 1) {
+
+      if (millis() > (timeNow + frequency)) {
+        // if the time has passed
+        delayFlag = 0;
+        curDelay = 0;
+      }
+    }*/
+  } else {
+    if (sampleCount != -1) {
+      // Serial.println("System has finished sampling");
+    }
+    sampleCount = -1;
+    deepSleepSetup(-1);
+    startDeepSleep();
+
+    //Serial.println("Stuck");
+  }
+}
 
 int servoDegrees(byte portNumber) {
 
@@ -299,8 +602,6 @@ int servoDegrees(byte portNumber) {
   }
 }
 
-
-// This function determines the turbidity in NTUs from the raw ADC value
 float getTurbidity() {
   float voltage;
   float turb;
@@ -322,7 +623,6 @@ float getTemperature() {
   return temperatureSensor.getTempCByIndex(0);
 }
 
-
 void initSDCard() {
   uint8_t sdCardType = SD.cardType();
   bool sdError = 0;
@@ -334,15 +634,14 @@ void initSDCard() {
   }
   //Serial.println("SD Card Mounted");
   if (sdCardType == CARD_NONE) {
-   // Serial.println("No SD card attached");
+    // Serial.println("No SD card attached");
     sdError = 1;
     return;
   } else {
     sdInit = 1;
-   // Serial.println("SD Card Attached");
+    // Serial.println("SD Card Attached");
   }
 }
-
 
 // Using function written for SD card example
 void appendFile(fs::FS &fs, String path, String message) {
@@ -350,17 +649,16 @@ void appendFile(fs::FS &fs, String path, String message) {
 
   File file = fs.open(path.c_str(), FILE_APPEND);
   if (!file) {
-   // Serial.println("Failed to open file for appending");
+    // Serial.println("Failed to open file for appending");
     return;
   }
   if (file.print(message.c_str())) {
     //Serial.println("Message appended");
   } else {
-   // Serial.println("Append failed");
+    // Serial.println("Append failed");
   }
   file.close();
 }
-
 
 bool testFileExistance(fs::FS &fs, String path) {
 
@@ -368,14 +666,13 @@ bool testFileExistance(fs::FS &fs, String path) {
 
   File file = fs.open(path.c_str());
   if (!file) {
-   // Serial.println("File Does Not Exists");
+    // Serial.println("File Does Not Exists");
     return 0;
   } else {
     //Serial.println("File Exists");
     return 1;
   }
 }
-
 
 void readSettingsFile(fs::FS &fs, String path) {
   String sdDataRead;
@@ -386,7 +683,7 @@ void readSettingsFile(fs::FS &fs, String path) {
 
   File file = fs.open(path.c_str());
   if (!file) {
-  //  Serial.println("Failed to open file for reading");
+    //  Serial.println("Failed to open file for reading");
     failedToReadFile = 1;
     return;
   }
@@ -410,7 +707,6 @@ void readSettingsFile(fs::FS &fs, String path) {
     writeGeneralInfoToSD();
   }
 }
-
 
 void splitStrings(String data) {
   byte newLineReady = 1;
@@ -442,9 +738,9 @@ void decodeSDString(String dataString) {
   if (strcmp(dataString.substring(0, 8).c_str(), "FileName") == 0) {
     // File Name
     fileNameData = dataString.substring(9, dataString.length());
-  //  Serial.print("File Name Changed To: ");
+    //  Serial.print("File Name Changed To: ");
     fileNameData = "/" + fileNameData;
-   // Serial.println(fileNameData);
+    // Serial.println(fileNameData);
 
   } else {
     if (strcmp(dataString.substring(0, 9).c_str(), "Frequency") == 0) {
@@ -470,15 +766,15 @@ void decodeSDString(String dataString) {
 
 
 
-      frequency = temp * unitFactor;
+      interval = temp * unitFactor;
 
-     // Serial.print("Frequency Changed To: ");
-     // Serial.println(frequency);
+      // Serial.print("Frequency Changed To: ");
+      // Serial.println(frequency);
     } else {
       if (strcmp(dataString.substring(0, 8).c_str(), "Location") == 0) {
         sampleLocation = dataString.substring(9, dataString.length() - 1);
-       // Serial.print("Sample Location: ");
-       // Serial.println(sampleLocation);
+        // Serial.print("Sample Location: ");
+        // Serial.println(sampleLocation);
       } else {
         if (strcmp(dataString.substring(0, 4).c_str(), "Date") == 0) {
           sampleDate = dataString.substring(5, dataString.length() - 1);
@@ -488,18 +784,16 @@ void decodeSDString(String dataString) {
           if (strcmp(dataString.substring(0, 11).c_str(), "SampleCount") == 0) {
             sampleCountString = dataString.substring(12, dataString.length());
             sampleCount = sampleCountString.toInt();
-           // Serial.print("Sample Count: ");
-           // Serial.println(sampleCount);
+            // Serial.print("Sample Count: ");
+            // Serial.println(sampleCount);
           } else {
-          //  Serial.println("Error occured while decoding the settings file.");
+            //  Serial.println("Error occured while decoding the settings file.");
           }
         }
       }
     }
   }
 }
-
-
 
 void writeGeneralInfoToSD() {
 
@@ -514,7 +808,7 @@ void writeGeneralInfoToSD() {
   sdDataWrite += "\n";
   appendFile(SD, fileNameData, sdDataWrite);
   sdDataWrite = "Frequency,";
-  sdDataWrite += frequency;
+  sdDataWrite += interval;
   sdDataWrite += ",";
   sdDataWrite += "\n";
   appendFile(SD, fileNameData, sdDataWrite);
@@ -569,7 +863,7 @@ void duplicateFileDetected() {
     fileNameData += duplicateFileCount;
     fileNameData += ").txt";
   }
-/*  Serial.print("Duplicate file found: ");
+  /*  Serial.print("Duplicate file found: ");
   Serial.println(duplicateFileCount);
   Serial.println(fileNameData);
   Serial.println("");*/
@@ -581,18 +875,17 @@ void print_wakeup_reason() {
   wakeup_reason = esp_sleep_get_wakeup_cause();
 
   switch (wakeup_reason) {
-  /*  case ESP_SLEEP_WAKEUP_EXT0: Serial.println("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT0: Serial.println("Wakeup caused by external signal using RTC_IO"); break;
     case ESP_SLEEP_WAKEUP_EXT1: Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
     case ESP_SLEEP_WAKEUP_TIMER: Serial.println("Wakeup caused by timer"); break;
     case ESP_SLEEP_WAKEUP_TOUCHPAD: Serial.println("Wakeup caused by touchpad"); break;
     case ESP_SLEEP_WAKEUP_ULP: Serial.println("Wakeup caused by ULP program"); break;
-    default: Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason); break;*/
+    default: Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason); break;
   }
 }
 
-
 void startDeepSleep() {
- // Serial.println("Going to sleep now");
+  // Serial.println("Going to sleep now");
   delay(1000);
   Serial.flush();
   esp_deep_sleep_start();
@@ -602,7 +895,7 @@ void startDeepSleep() {
 void deepSleepSetup(int Time) {
   if (Time != -1) {
     esp_sleep_enable_timer_wakeup(Time * msToUs);
-   // Serial.println("Setup ESP32 to sleep for every " + String(frequency / 1000) + " Seconds");
+    // Serial.println("Setup ESP32 to sleep for every " + String(frequency / 1000) + " Seconds");
   } else {
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
   }
@@ -623,8 +916,8 @@ void IRAM_ATTR sdCardRemove() {
   }
 }
 
-void setupSDCard(){
-   sdCardDetected = digitalRead(cardDetectPin);
+void setupSDCard() {
+  sdCardDetected = digitalRead(cardDetectPin);
   sdCardDetectedPrev = sdCardDetected;
 
   if (sdCardDetected) {
@@ -640,232 +933,152 @@ void setupSDCard(){
   }
 }
 
-void sdCardCheckDuringLoop(){
-  
-    sdCardDetected = digitalRead(cardDetectPin);
-    digitalWrite(onboardLedPin, sdCardDetected);
+void sdCardCheckDuringLoop() {
 
-    if ((sdCardDetected != sdCardDetectedPrev) || (failedToReadFile)) {
-      if (sdCardDetected) {
+  sdCardDetected = digitalRead(cardDetectPin);
+  digitalWrite(onboardLedPin, sdCardDetected);
+
+  if ((sdCardDetected != sdCardDetectedPrev) || (failedToReadFile)) {
+    if (sdCardDetected) {
       //  Serial.println("SD Card Detected");
-        if (sdCardDetected) {
+      if (sdCardDetected) {
+        initSDCard();
+        if (!sdInit) {
+          delay(50);
           initSDCard();
-          if (!sdInit) {
-            delay(50);
-            initSDCard();
-          }
         }
+      }
 
-        if (sdInit) {
-          readSettingsFile(SD, fileNameSettings);
-          sampleCurrent = 1;
-        }
-      } else {
-        //Serial.println("SD Card Removed");
-        frequency = 1000;
-        sdInit = 0;
+      if (sdInit) {
+        readSettingsFile(SD, fileNameSettings);
         sampleCurrent = 1;
-        sampleCount = 0;
       }
+    } else {
+      //Serial.println("SD Card Removed");
+      interval = 1000;
+      sdInit = 0;
+      sampleCurrent = 1;
+      sampleCount = 0;
     }
-    sdCardDetectedPrev = sdCardDetected;
+  }
+  sdCardDetectedPrev = sdCardDetected;
 }
 
-void collectionMode(){
- if (sampleCount == 0) {
-    state = 0;
-  } else {
-    state = 1;
-  }
-  if ((sampleCurrent <= sampleCount) || (sampleCount == 0)) {
-
-
-    //if (delayFlag == 0) {
-
-    sdCardCheckDuringLoop();
-
-    turbidityReading = getTurbidity();
-    temperatureReading = getTemperature();
-    /*Serial.print("Sample ");
-    Serial.print(sampleCurrent);
-    Serial.print(" of ");
-    Serial.println(sampleCount);
-    Serial.print("Turbidity: ");
-    Serial.println(turbidityReading);
-    Serial.print("Temperature: ");
-    Serial.println(temperatureReading);
-    Serial.println(" ");*/
-
-    if (sdInit) {
-      sdDataWrite = sampleCurrent;
-      sdDataWrite += ",";
-      sdDataWrite += turbidityReading;
-      sdDataWrite += ",";
-      sdDataWrite += temperatureReading;
-      sdDataWrite += "\n";
-      appendFile(SD, fileNameData, sdDataWrite.c_str());
-    } else if (!sdInit && sdCardDetected) {
-      initSDCard();
-    }
-
-    sampleCurrent++;
-    delayFlag = 1;
-    Timer = millis();
-
-    if (sampleCurrent > sampleCount) {
-      if (sampleCount != -1) {
-      //  Serial.println("System has finished sampling");
-      }
-      sampleCount = -1;
-      deepSleepSetup(-1);
-    }
-
-    startDeepSleep();
-
-    /*} else if (delayFlag == 1) {
-
-      if (millis() > (Timer + frequency)) {
-        // if the time has passed
-        delayFlag = 0;
-        curDelay = 0;
-      }
-    }*/
-  } else {
-    if (sampleCount != -1) {
-     // Serial.println("System has finished sampling");
-    }
-    sampleCount = -1;
-    deepSleepSetup(-1);
-    startDeepSleep();
-
-    //Serial.println("Stuck");
-  }
-}
-
-void monitorMode(){
+void monitorMode() {
 
   readSerial();
 
-  if(serialDataReceivedState == true){
+  if (serialDataReceivedState == true) {
 
-    if (serialDataReceived[1] == '#'){
+    if (serialDataReceived[1] == '#') {
       //2.4;2.5;2.6
-      switch(serialDataReceived[0]){
+      switch (serialDataReceived[0]) {
         case 'R':
-        //2.4
+          //2.4
           guiReadCoefficients();
-        break;
+          break;
         case 'C':
-        //2.5  
+          //2.5
           guiNewCoefficients();
-        break;
-        case 'S': 
-        //2.6  
+          break;
+        case 'S':
+          //2.6
           guiReadSensorValue();
-        break;
+          break;
         default:
 
-        break;
+          break;
       }
 
 
 
-    } else if(serialDataReceived[2] == '#'){
+    } else if (serialDataReceived[2] == '#') {
       //2.7;2.8;2.9;2.10;2.11
 
-      if(serialDataReceived.substring(0,2) == "MR"){
+      if (serialDataReceived.substring(0, 2) == "MR") {
         //2.7
         guiMonitor();
 
-      } else if(serialDataReceived.substring(0,2) == "FR"){
+      } else if (serialDataReceived.substring(0, 2) == "FR") {
         //2.8
         guiFileName();
-        
-      } else if (serialDataReceived.substring(0,2) == "DR"){
+
+      } else if (serialDataReceived.substring(0, 2) == "DR") {
         //2.9
         guiFileDataRead();
 
-      } else if(serialDataReceived.substring(0,2) == "CR"){
+      } else if (serialDataReceived.substring(0, 2) == "CR") {
         //2.10
         guiConfig();
 
-      } else if(serialDataReceived.substring(0,2) == "CS"){
+      } else if (serialDataReceived.substring(0, 2) == "CS") {
         //2.11
         guiNewConfig();
-
       }
 
 
-    
-    }else if(serialDataReceived.substring(0,22) == "Penny is a freeloader."){
+
+    } else if (serialDataReceived.substring(0, 22) == "Penny is a freeloader.") {
       //2.3
-      Serial.println("No Spaces");    
+      SerialBT.println("No Spaces");
     }
 
-    serialDataReceivedState = false; 
+    serialDataReceivedState = false;
   }
 }
 
-
-void readSerial(){
+void readSerial() {
   char tempSerialData;
-  
+
   serialDataReceived = "";
-  
-  while (Serial.available() > 0)
-  {
+
+  while (SerialBT.available() > 0) {
     serialDataReceivedState = true;
-    tempSerialData = Serial.read(); //reads serial input
+    tempSerialData = SerialBT.read();  //reads serial input
     serialDataReceived += tempSerialData;
   }
-
 }
 
+void guiReadCoefficients() {
 
-void guiReadCoefficients(){
-  
-  guiReadCoefFile(SD,fileNameCoef);
-
-
+  guiReadCoefFile(SD, fileNameCoef);
 }
 
-void guiNewCoefficients(){
+void guiNewCoefficients() {
 
-  guiWriteCoefFile(SD,fileNameCoef);
+  guiWriteCoefFile(SD, fileNameCoef);
 
   deleteFile(SD, fileNameCoef);
   renameFile(SD, fileNameCoefTemp, fileNameCoef);
 }
 
-void guiReadSensorValue(){
+void guiReadSensorValue() {
 
   String transmission = "SR#";
 
 
 
-  if (serialDataReceived.substring(2,3) == "0"){
-      //Temperature
-      transmission += getTempRawString();
-      transmission += "#";
-      transmission += getTempProcessed();
-      transmission += "#";
+  if (serialDataReceived.substring(2, 3) == "0") {
+    //Temperature
+    transmission += getTempRawString();
+    transmission += "#";
+    transmission += getTempProcessed();
+    transmission += "#";
 
 
 
-  } else if ((serialDataReceived.substring(2,3) == "1")){
+  } else if ((serialDataReceived.substring(2, 3) == "1")) {
     //Turbidity
-      transmission += getTurbRawString();
-      transmission += "#";
-      transmission += getTurbProcessed();
-      transmission += "#";
+    transmission += getTurbRawString();
+    transmission += "#";
+    transmission += getTurbProcessed();
+    transmission += "#";
   }
 
-  Serial.println(transmission);
-
-
+  SerialBT.println(transmission);
 }
 
-void guiMonitor(){
+void guiMonitor() {
   String temp = "";
 
   temp = getTempRawString();
@@ -879,29 +1092,23 @@ void guiMonitor(){
   transmissionString += getSDMonitorValues();
   transmissionString += "#";
   transmissionString += getTempProcessed();
-  
- 
+
+
   transmissionString += "#";
   transmissionString += getTurbProcessed();
- 
+
   transmissionString += "#";
 
-  Serial.println(transmissionString);
-
-
-
-
+  SerialBT.println(transmissionString);
 }
 
-void guiFileName(){
+void guiFileName() {
 
   listDir(SD, "/", 1);
-
-
 }
 
-void guiFileDataRead(){
-  String fileNameToRead = "/" + serialDataReceived.substring(3,serialDataReceived.length()-2);
+void guiFileDataRead() {
+  String fileNameToRead = "/" + serialDataReceived.substring(3, serialDataReceived.length() - 2);
   String transmissionString = "DW#";
 
 
@@ -909,15 +1116,15 @@ void guiFileDataRead(){
 
 
 
-  transmissionString += readDataFile(SD,fileNameToRead);
+  transmissionString += readDataFile(SD, fileNameToRead);
   //transmissionString += "#";
 
-  Serial.println(transmissionString);
+  SerialBT.println(transmissionString);
 }
 
-void guiConfig(){
+void guiConfig() {
   String tempTransmission;
-  guiReadConfigFile(SD,fileNameSettings);
+  guiReadConfigFile(SD, fileNameSettings);
 
   tempTransmission = "CW#";
   tempTransmission += guiFileNameText;
@@ -931,53 +1138,46 @@ void guiConfig(){
   tempTransmission += guiFrequencyText;
   tempTransmission += "#";
 
-  Serial.println(tempTransmission);
-
+  SerialBT.println(tempTransmission);
 }
 
-void guiNewConfig(){
+void guiNewConfig() {
   String tmpData;
   int nextPos;
 
 
 
-  tmpData = serialDataReceived.substring(3,serialDataReceived.length());
+  tmpData = serialDataReceived.substring(3, serialDataReceived.length());
 
   DecodeNewConfig(tmpData);
-  deleteFile(SD,fileNameSettings);
+  deleteFile(SD, fileNameSettings);
   createNewConfigFile();
-  
-  
-  
-
-
-
 }
 
-void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
- 
-  Serial.print("FW#");
+void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
+
+  SerialBT.print("FW#");
   File root = fs.open(dirname);
-  if(!root){
+  if (!root) {
     return;
   }
-  if(!root.isDirectory()){
+  if (!root.isDirectory()) {
     return;
   }
 
   File file = root.openNextFile();
-  while(file){
-    if(file.isDirectory()){
-      if(levels){
-        listDir(fs, file.name(), levels -1);
+  while (file) {
+    if (file.isDirectory()) {
+      if (levels) {
+        listDir(fs, file.name(), levels - 1);
       }
     } else {
-      Serial.print(file.name());
-      Serial.print("#");
+      SerialBT.print(file.name());
+      SerialBT.print("#");
     }
     file = root.openNextFile();
   }
-  Serial.println("");
+  SerialBT.println("");
 }
 
 String readDataFile(fs::FS &fs, String path) {
@@ -998,10 +1198,10 @@ String readDataFile(fs::FS &fs, String path) {
 
   while (file.available()) {
     incommingData = file.readStringUntil('\n');
-    
-   // if (incommingData.indexOf('\n') > 0){
-            sdDataRead += incommingData;
-  /*  } else{
+
+    // if (incommingData.indexOf('\n') > 0){
+    sdDataRead += incommingData;
+    /*  } else{
 
       sdDataRead += incommingData.substring(0,incommingData.length()-1);
       sdDataRead += incommingData.indexOf('\n');
@@ -1010,7 +1210,7 @@ String readDataFile(fs::FS &fs, String path) {
     //Serial.print(sdDataRead);
   }
   file.close();
- 
+
   return sdDataRead;
 }
 
@@ -1026,7 +1226,6 @@ void guiReadConfigFile(fs::FS &fs, String path) {
   if (!file) {
     //Serial.println("Failed to open file for reading");
     failedToReadFile = 1;
-    
   }
   failedToReadFile = 0;
 
@@ -1034,68 +1233,59 @@ void guiReadConfigFile(fs::FS &fs, String path) {
     incommingData = file.readStringUntil('\n');
 
     decodeConfigFile(incommingData);
-    
-    
   }
   file.close();
- 
-  
-
-
-
 }
 
-
-void decodeConfigFile(String data){
-  if(data.substring(0,8) == "FileName"){
-    guiFileNameText = data.substring(9,data.length());
-    if(guiFileNameText[guiFileNameText.length()]=='\n'){
-      guiFileNameText = guiFileNameText.substring(0,guiFileNameText.length()-1);
+void decodeConfigFile(String data) {
+  if (data.substring(0, 8) == "FileName") {
+    guiFileNameText = data.substring(9, data.length());
+    if (guiFileNameText[guiFileNameText.length()] == '\n') {
+      guiFileNameText = guiFileNameText.substring(0, guiFileNameText.length() - 1);
     }
-  } else if(data.substring(0,9) == "Frequency"){
-    guiFrequencyText = data.substring(10,data.length());
-    if(guiFrequencyText[guiFrequencyText.length()]=='\n'){
-      guiFrequencyText = guiFrequencyText.substring(0,guiFrequencyText.length()-1);
+  } else if (data.substring(0, 9) == "Frequency") {
+    guiFrequencyText = data.substring(10, data.length());
+    if (guiFrequencyText[guiFrequencyText.length()] == '\n') {
+      guiFrequencyText = guiFrequencyText.substring(0, guiFrequencyText.length() - 1);
     }
-  } else if(data.substring(0,8) == "Location"){
-    guiLocationText = data.substring(9,data.length());
-    if(guiLocationText[guiLocationText.length()]=='\n'){
-      guiLocationText = guiLocationText.substring(0,guiLocationText.length()-1);
+  } else if (data.substring(0, 8) == "Location") {
+    guiLocationText = data.substring(9, data.length());
+    if (guiLocationText[guiLocationText.length()] == '\n') {
+      guiLocationText = guiLocationText.substring(0, guiLocationText.length() - 1);
     }
-  } else if(data.substring(0,4) == "Date"){
-    guiDateText = data.substring(5,data.length());
-    if(guiDateText[guiDateText.length()]=='\n'){
-      guiDateText = guiDateText.substring(0,guiDateText.length()-1);
+  } else if (data.substring(0, 4) == "Date") {
+    guiDateText = data.substring(5, data.length());
+    if (guiDateText[guiDateText.length()] == '\n') {
+      guiDateText = guiDateText.substring(0, guiDateText.length() - 1);
     }
-  } else if(data.substring(0,11) == "SampleCount"){
-    guiSampleCountText = data.substring(12,data.length());
-    if(guiSampleCountText[guiSampleCountText.length()]=='\n'){
-      guiSampleCountText = guiSampleCountText.substring(0,guiSampleCountText.length()-1);
+  } else if (data.substring(0, 11) == "SampleCount") {
+    guiSampleCountText = data.substring(12, data.length());
+    if (guiSampleCountText[guiSampleCountText.length()] == '\n') {
+      guiSampleCountText = guiSampleCountText.substring(0, guiSampleCountText.length() - 1);
     }
   }
 }
 
-void deleteFile(fs::FS &fs, String path){
+void deleteFile(fs::FS &fs, String path) {
   //Serial.printf("Deleting file: %s\n", path);
-  if(fs.remove(path.c_str())){
+  if (fs.remove(path.c_str())) {
     //Serial.println("File deleted");
   } else {
-   // Serial.println("Delete failed");
+    // Serial.println("Delete failed");
   }
 }
 
-
-void DecodeNewConfig(String tempData){
+void DecodeNewConfig(String tempData) {
   int nextPos;
- 
-  
+
+
   //Serial.println(tempData);
 
   nextPos = tempData.indexOf('#');
   guiFileNameText = tempData.substring(0, nextPos);
   tempData = tempData.substring(nextPos + 1, (tempData.length()));
- // Serial.println(tempData);
-  
+  // Serial.println(tempData);
+
   nextPos = tempData.indexOf('#');
   guiDateText = tempData.substring(0, nextPos);
   tempData = tempData.substring(nextPos + 1, (tempData.length()));
@@ -1104,7 +1294,7 @@ void DecodeNewConfig(String tempData){
   nextPos = tempData.indexOf('#');
   guiLocationText = tempData.substring(0, nextPos);
   tempData = tempData.substring(nextPos + 1, (tempData.length()));
- // Serial.println(tempData);
+  // Serial.println(tempData);
 
   nextPos = tempData.indexOf('#');
   guiSampleCountText = tempData.substring(0, nextPos);
@@ -1112,12 +1302,12 @@ void DecodeNewConfig(String tempData){
   //Serial.println(tempData);
 
   nextPos = tempData.indexOf('#');
-  guiFrequencyText = tempData.substring(0, tempData.length()-2);
+  guiFrequencyText = tempData.substring(0, tempData.length() - 2);
   //Serial.println(tempData);
 }
 
 void createNewConfigFile() {
-  
+
   sdDataWrite = "FileName ";
   sdDataWrite += guiFileNameText;
   sdDataWrite += "\n";
@@ -1151,19 +1341,15 @@ void guiReadCoefFile(fs::FS &fs, String path) {
   if (!file) {
     //Serial.println("Failed to open file for reading");
     failedToReadFile = 1;
-    
   }
   failedToReadFile = 0;
 
   while (file.available()) {
     incommingData = file.readStringUntil('\n');
 
-    decodeCoefFile(incommingData, serialDataReceived.substring(2,serialDataReceived.length()).toInt());
-    
-    
+    decodeCoefFile(incommingData, serialDataReceived.substring(2, serialDataReceived.length()).toInt());
   }
   file.close();
-
 }
 
 void ReadCoefFile(fs::FS &fs, String path) {
@@ -1178,7 +1364,6 @@ void ReadCoefFile(fs::FS &fs, String path) {
   if (!file) {
     //Serial.println("Failed to open file for reading");
     failedToReadFile = 1;
-    
   }
   failedToReadFile = 0;
 
@@ -1186,11 +1371,8 @@ void ReadCoefFile(fs::FS &fs, String path) {
     incommingData = file.readStringUntil('\n');
 
     readCoefFromFile(incommingData);
-    
-    
   }
   file.close();
-
 }
 
 void guiWriteCoefFile(fs::FS &fs, String path) {
@@ -1205,26 +1387,23 @@ void guiWriteCoefFile(fs::FS &fs, String path) {
   if (!file) {
     //Serial.println("Failed to open file for reading");
     failedToReadFile = 1;
-    
   }
   failedToReadFile = 0;
 
-  serialDataReceived = serialDataReceived.substring(serialDataReceived.indexOf('#')+1,serialDataReceived.length());
+  serialDataReceived = serialDataReceived.substring(serialDataReceived.indexOf('#') + 1, serialDataReceived.length());
   while (file.available()) {
     incommingData = file.readStringUntil('\n');
 
-    
-    decodePrevCoefFile(incommingData, serialDataReceived.substring(0,serialDataReceived.indexOf('#')).toInt());
+
+    decodePrevCoefFile(incommingData, serialDataReceived.substring(0, serialDataReceived.indexOf('#')).toInt());
     //appendFile(SD, "/log.txt", serialDataReceived.substring(0,serialDataReceived.indexOf('#')) + '\n');
-    
   }
   file.close();
-
 }
 
-void decodeCoefFile(String tempData, byte selectedSensor){
+void decodeCoefFile(String tempData, byte selectedSensor) {
   int nextPos;
-  String Sensor;  
+  String Sensor;
   String transmission = "RR#";
 
 
@@ -1234,44 +1413,42 @@ void decodeCoefFile(String tempData, byte selectedSensor){
   Sensor = tempData.substring(0, nextPos);
   tempData = tempData.substring(nextPos + 1, (tempData.length()));
 
-  if(((Sensor == "Temperature")&&(selectedSensor == 0))||((Sensor == "Turbidity")&&(selectedSensor == 1))){
-     transmission += tempData.substring(0, tempData.length());
-     Serial.println(transmission);
+  if (((Sensor == "Temperature") && (selectedSensor == 0)) || ((Sensor == "Turbidity") && (selectedSensor == 1))) {
+    transmission += tempData.substring(0, tempData.length());
+    SerialBT.println(transmission);
 
-    if(selectedSensor == 0){
+    if (selectedSensor == 0) {
 
-        nextPos = tempData.indexOf('#');
-        tempCoefA = tempData.substring(0, nextPos).toFloat();
-        tempData = tempData.substring(nextPos + 1, (tempData.length()));
-      
-        nextPos = tempData.indexOf('#');
-        tempCoefB = tempData.substring(0, nextPos).toFloat();
-       /* Serial.println(tempCoefA);
+      nextPos = tempData.indexOf('#');
+      tempCoefA = tempData.substring(0, nextPos).toFloat();
+      tempData = tempData.substring(nextPos + 1, (tempData.length()));
+
+      nextPos = tempData.indexOf('#');
+      tempCoefB = tempData.substring(0, nextPos).toFloat();
+      /* Serial.println(tempCoefA);
         Serial.println(tempCoefB);*/
 
-    } else if (selectedSensor == 1){
-        nextPos = tempData.indexOf('#');
-        turbCoefA = tempData.substring(0, nextPos).toFloat();
-        tempData = tempData.substring(nextPos + 1, (tempData.length()));
-      
-        nextPos = tempData.indexOf('#');
-        turbCoefB = tempData.substring(0, nextPos).toFloat();
-        tempData = tempData.substring(nextPos + 1, (tempData.length()));
-      
-        nextPos = tempData.indexOf('#');
-        turbCoefC = tempData.substring(0, nextPos).toFloat();
-        /*Serial.println(turbCoefA);
+    } else if (selectedSensor == 1) {
+      nextPos = tempData.indexOf('#');
+      turbCoefA = tempData.substring(0, nextPos).toFloat();
+      tempData = tempData.substring(nextPos + 1, (tempData.length()));
+
+      nextPos = tempData.indexOf('#');
+      turbCoefB = tempData.substring(0, nextPos).toFloat();
+      tempData = tempData.substring(nextPos + 1, (tempData.length()));
+
+      nextPos = tempData.indexOf('#');
+      turbCoefC = tempData.substring(0, nextPos).toFloat();
+      /*Serial.println(turbCoefA);
         Serial.println(turbCoefB);
         Serial.println(turbCoefC);*/
     }
-
-  } 
-  
+  }
 }
 
-void readCoefFromFile(String tempData){
+void readCoefFromFile(String tempData) {
   int nextPos;
-  String Sensor;  
+  String Sensor;
 
 
 
@@ -1282,36 +1459,32 @@ void readCoefFromFile(String tempData){
   tempData = tempData.substring(nextPos + 1, (tempData.length()));
 
 
-    if(Sensor == "Temperature"){
+  if (Sensor == "Temperature") {
 
-        nextPos = tempData.indexOf('#');
-        tempCoefA = tempData.substring(0, nextPos).toFloat();
-        tempData = tempData.substring(nextPos + 1, (tempData.length()));
-      
-        nextPos = tempData.indexOf('#');
-        tempCoefB = tempData.substring(0, nextPos).toFloat();
+    nextPos = tempData.indexOf('#');
+    tempCoefA = tempData.substring(0, nextPos).toFloat();
+    tempData = tempData.substring(nextPos + 1, (tempData.length()));
 
-    } else if (Sensor == "Turbidity"){
-        nextPos = tempData.indexOf('#');
-        turbCoefA = tempData.substring(0, nextPos).toFloat();
-        tempData = tempData.substring(nextPos + 1, (tempData.length()));
-      
-        nextPos = tempData.indexOf('#');
-        turbCoefB = tempData.substring(0, nextPos).toFloat();
-        tempData = tempData.substring(nextPos + 1, (tempData.length()));
-      
-        nextPos = tempData.indexOf('#');
-        turbCoefC = tempData.substring(0, nextPos).toFloat();
+    nextPos = tempData.indexOf('#');
+    tempCoefB = tempData.substring(0, nextPos).toFloat();
 
-    }
+  } else if (Sensor == "Turbidity") {
+    nextPos = tempData.indexOf('#');
+    turbCoefA = tempData.substring(0, nextPos).toFloat();
+    tempData = tempData.substring(nextPos + 1, (tempData.length()));
 
-  
-  
+    nextPos = tempData.indexOf('#');
+    turbCoefB = tempData.substring(0, nextPos).toFloat();
+    tempData = tempData.substring(nextPos + 1, (tempData.length()));
+
+    nextPos = tempData.indexOf('#');
+    turbCoefC = tempData.substring(0, nextPos).toFloat();
+  }
 }
 
-void decodePrevCoefFile(String tempData, byte selectedSensor){
+void decodePrevCoefFile(String tempData, byte selectedSensor) {
   int nextPos;
-  String Sensor;  
+  String Sensor;
   String newLine = "";
   String tempDataLine = "";
 
@@ -1323,135 +1496,144 @@ void decodePrevCoefFile(String tempData, byte selectedSensor){
   tempData = tempData.substring(nextPos + 1, (tempData.length()));
 
 
-  if(Sensor == "Temperature"){
+  if (Sensor == "Temperature") {
     newLine = "Temperature#";
 
-    if(selectedSensor == 0){
+    if (selectedSensor == 0) {
       //change coef
-      tempDataLine = serialDataReceived.substring(2,serialDataReceived.length());
+      tempDataLine = serialDataReceived.substring(2, serialDataReceived.length());
       newLine += tempDataLine;
-    } else{
+    } else {
       tempDataLine = tempData;
       newLine += tempDataLine;
     }
 
-        nextPos = tempDataLine.indexOf('#');
-        tempCoefA = tempDataLine.substring(0, nextPos).toFloat();
-        tempDataLine = tempDataLine.substring(nextPos + 1, (tempDataLine.length()));
-      
-        nextPos = tempDataLine.indexOf('#');
-        tempCoefB = tempDataLine.substring(0, nextPos).toFloat();
-       /* Serial.println(tempCoefA);
+    nextPos = tempDataLine.indexOf('#');
+    tempCoefA = tempDataLine.substring(0, nextPos).toFloat();
+    tempDataLine = tempDataLine.substring(nextPos + 1, (tempDataLine.length()));
+
+    nextPos = tempDataLine.indexOf('#');
+    tempCoefB = tempDataLine.substring(0, nextPos).toFloat();
+    /* Serial.println(tempCoefA);
         Serial.println(tempCoefB);*/
 
 
 
-  } else  if(Sensor == "Turbidity"){
+  } else if (Sensor == "Turbidity") {
     newLine = "Turbidity#";
-    if(selectedSensor == 1){
+    if (selectedSensor == 1) {
       //change coef
-      tempDataLine = serialDataReceived.substring(2,serialDataReceived.length());
+      tempDataLine = serialDataReceived.substring(2, serialDataReceived.length());
       newLine += tempDataLine;
-    } else{
+    } else {
       tempDataLine = tempData;
       newLine += tempDataLine;
     }
 
 
-    
- 
-        nextPos = tempDataLine.indexOf('#');
-        turbCoefA = tempDataLine.substring(0, nextPos).toFloat();
-        tempDataLine = tempDataLine.substring(nextPos + 1, (tempDataLine.length()));
-      
-        nextPos = tempDataLine.indexOf('#');
-        turbCoefB = tempDataLine.substring(0, nextPos).toFloat();
-        tempDataLine = tempDataLine.substring(nextPos + 1, (tempDataLine.length()));
-      
-        nextPos = tempDataLine.indexOf('#');
-        turbCoefC = tempDataLine.substring(0, nextPos).toFloat();
-      /*  Serial.println(turbCoefA);
+
+
+    nextPos = tempDataLine.indexOf('#');
+    turbCoefA = tempDataLine.substring(0, nextPos).toFloat();
+    tempDataLine = tempDataLine.substring(nextPos + 1, (tempDataLine.length()));
+
+    nextPos = tempDataLine.indexOf('#');
+    turbCoefB = tempDataLine.substring(0, nextPos).toFloat();
+    tempDataLine = tempDataLine.substring(nextPos + 1, (tempDataLine.length()));
+
+    nextPos = tempDataLine.indexOf('#');
+    turbCoefC = tempDataLine.substring(0, nextPos).toFloat();
+    /*  Serial.println(turbCoefA);
         Serial.println(turbCoefB);
         Serial.println(turbCoefC);*/
-    
-
   }
   newLine += '\n';
   appendFile(SD, fileNameCoefTemp, newLine);
-
-  
 }
 
-void renameFile(fs::FS &fs, String path1, String path2){
+void renameFile(fs::FS &fs, String path1, String path2) {
   //Serial.printf("Renaming file %s to %s\n", path1.c_str(), path2.c_str());
   if (fs.rename(path1, path2)) {
-   // Serial.println("File renamed");
+    // Serial.println("File renamed");
   } else {
-  //  Serial.println("Rename failed");
+    //  Serial.println("Rename failed");
   }
 }
 
-String getTime(){
+String getTime() {
   String temp = "";
   DateTime now = rtc.now();
-  
+  /*
 
-  temp += now.year(); 
+
+
+  temp += "2023"; 
+  temp += '/';
+  temp += "09";
+  temp += '/';
+  temp += "25";
+  temp += " ";
+  temp +=  "21";
+  temp += ':';
+  temp += "45";
+  temp += ':';
+  temp += "10";
+  */
+
+  temp += now.year();
   temp += '/';
   temp += now.month();
   temp += '/';
   temp += now.day();
   temp += " ";
-  temp += now.hour() ;
+  temp += now.hour();
   temp += ':';
   temp += now.minute();
   temp += ':';
   temp += now.second();
 
   return temp;
-
 }
 
-String getBattery(){
+String getBattery() {
   return "N/A";
 }
 
-String getSDMonitorValues(){
+String getSDMonitorValues() {
   String temp = "";
   bool continueSD = true;
-  if(SD.begin(32)){
-    temp += "Mounted#";    
-  } else{
+  if (SD.begin(32)) {
+    temp += "Mounted#";
+  } else {
     temp += "N/A#";
     continueSD = false;
   }
 
-  if (continueSD){
+  if (continueSD) {
     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
     temp += cardSize;
     temp += "MB#";
     uint64_t usedbytes = SD.usedBytes() / (1024 * 1024);
     temp += usedbytes;
     temp += "MB#";
-   
-    uint64_t div = round((usedbytes*100)/cardSize);
-    
-  
+
+    uint64_t div = round((usedbytes * 100) / cardSize);
+
+
     temp += div;
     temp += "%";
 
 
-  } else{
+  } else {
     temp += "N/A#";
     temp += "N/A#";
     temp += "N/A";
   }
 
-return temp;
-
+  return temp;
 }
 
-String getTurbProcessed(){
+String getTurbProcessed() {
 
   float turb;
   float processedTurb;
@@ -1460,18 +1642,15 @@ String getTurbProcessed(){
 
   turb = turbVal;
 
-  processedTurb = turb*turb*turbCoefA + turbCoefB*turb + turbCoefC;
+  processedTurb = turb * turb * turbCoefA + turbCoefB * turb + turbCoefC;
   //processedTurb = turb;
   dtostrf(processedTurb, 4, 2, turbChar);
   turbString = turbChar;
 
   return turbString;
-
-
 }
 
-
-String getTempProcessed(){
+String getTempProcessed() {
 
   float temp;
   float processedTemp;
@@ -1480,14 +1659,14 @@ String getTempProcessed(){
 
   temp = tempVal;
 
-  processedTemp = temp*tempCoefA + tempCoefB;
+  processedTemp = temp * tempCoefA + tempCoefB;
   dtostrf(processedTemp, 4, 2, tempChar);
   tempString = tempChar;
 
   return tempString;
 }
 
-String getTempRawString(){
+String getTempRawString() {
 
   float temp;
   float processedTemp;
@@ -1504,7 +1683,7 @@ String getTempRawString(){
   return tempString;
 }
 
-String getTurbRawString(){
+String getTurbRawString() {
 
   float temp;
   float processedTemp;

@@ -1,9 +1,18 @@
 #include <Wire.h>           // Include the Wire library for I2C communication
 #include "RTClib.h"         // Include the RTC library
 
+#define relayPower 14
 RTC_DS3231 rtc;             // Create an RTC object
 
 void setup() {
+
+  pinMode(relayPower, OUTPUT);
+
+  digitalWrite(relayPower, HIGH);
+
+
+  delay(1000);
+
   Serial.begin(115200);     // Start the serial communication
   Wire.begin();             // Start the I2C communication
 

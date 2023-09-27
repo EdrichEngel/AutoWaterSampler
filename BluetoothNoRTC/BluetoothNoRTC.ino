@@ -8,6 +8,11 @@
 #include "cmath"
 #include <Wire.h>           // Include the Wire library for I2C communication
 #include "RTClib.h"         // Include the RTC library
+#include "BluetoothSerial.h"
+
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
 
 #define pinSwitchMode 10 // Change.......................................................................................
 
@@ -139,10 +144,10 @@ String readDataFile(fs::FS &fs, String path);
 Servo valveServo;                               // Create servo object
 OneWire oneWire(temperaturePin);                // Create a OneWire object for the temperature sensor
 DallasTemperature temperatureSensor(&oneWire);  // Create a DallasTemperature object by using the DallasTemperature library
-RTC_DS3231 rtc;                                 // Create an RTC object
+//RTC_DS3231 rtc;                                 // Create an RTC object
 
 
-
+BluetoothSerial SerialBT;
 
 void setup() {
 
@@ -154,15 +159,16 @@ void setup() {
 
   // Start Serial Communication
   Serial.begin(115200);
+  SerialBT.begin("WaterSampler"); //Bluetooth device name
+  Serial.println("The device started, now you can pair it with bluetooth!");
 
- Serial.println("Relay on");
-  delay(2000);
+
   
 
   Wire.begin();             // Start the I2C communication
 
 
-  if (! rtc.begin()) {
+ /* if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
     while (1);
   }
@@ -170,7 +176,7 @@ void setup() {
    // Serial.println("RTC lost power, lets set the time!");
     
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  }
+  }*/
 
   //Print boot cycle number and the wakeup reason
  // Serial.println("Boot number: " + String(bootCycleCount));
@@ -799,7 +805,7 @@ void monitorMode(){
     
     }else if(serialDataReceived.substring(0,22) == "Penny is a freeloader."){
       //2.3
-      Serial.println("No Spaces");    
+      SerialBT.println("No Spaces");    
     }
 
     serialDataReceivedState = false; 
@@ -812,10 +818,10 @@ void readSerial(){
   
   serialDataReceived = "";
   
-  while (Serial.available() > 0)
+  while (SerialBT.available() > 0)
   {
     serialDataReceivedState = true;
-    tempSerialData = Serial.read(); //reads serial input
+    tempSerialData = SerialBT.read(); //reads serial input
     serialDataReceived += tempSerialData;
   }
 
@@ -860,7 +866,7 @@ void guiReadSensorValue(){
       transmission += "#";
   }
 
-  Serial.println(transmission);
+  SerialBT.println(transmission);
 
 
 }
@@ -886,7 +892,7 @@ void guiMonitor(){
  
   transmissionString += "#";
 
-  Serial.println(transmissionString);
+  SerialBT.println(transmissionString);
 
 
 
@@ -912,7 +918,7 @@ void guiFileDataRead(){
   transmissionString += readDataFile(SD,fileNameToRead);
   //transmissionString += "#";
 
-  Serial.println(transmissionString);
+  SerialBT.println(transmissionString);
 }
 
 void guiConfig(){
@@ -931,7 +937,7 @@ void guiConfig(){
   tempTransmission += guiFrequencyText;
   tempTransmission += "#";
 
-  Serial.println(tempTransmission);
+  SerialBT.println(tempTransmission);
 
 }
 
@@ -956,7 +962,7 @@ void guiNewConfig(){
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
  
-  Serial.print("FW#");
+  SerialBT.print("FW#");
   File root = fs.open(dirname);
   if(!root){
     return;
@@ -972,12 +978,12 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
         listDir(fs, file.name(), levels -1);
       }
     } else {
-      Serial.print(file.name());
-      Serial.print("#");
+      SerialBT.print(file.name());
+      SerialBT.print("#");
     }
     file = root.openNextFile();
   }
-  Serial.println("");
+  SerialBT.println("");
 }
 
 String readDataFile(fs::FS &fs, String path) {
@@ -1236,7 +1242,7 @@ void decodeCoefFile(String tempData, byte selectedSensor){
 
   if(((Sensor == "Temperature")&&(selectedSensor == 0))||((Sensor == "Turbidity")&&(selectedSensor == 1))){
      transmission += tempData.substring(0, tempData.length());
-     Serial.println(transmission);
+     SerialBT.println(transmission);
 
     if(selectedSensor == 0){
 
@@ -1393,7 +1399,7 @@ void renameFile(fs::FS &fs, String path1, String path2){
 
 String getTime(){
   String temp = "";
-  DateTime now = rtc.now();
+  /*DateTime now = rtc.now();
   
 
   temp += now.year(); 
@@ -1407,6 +1413,21 @@ String getTime(){
   temp += now.minute();
   temp += ':';
   temp += now.second();
+*/
+
+
+
+  temp += "2023"; 
+  temp += '/';
+  temp += "09";
+  temp += '/';
+  temp += "25";
+  temp += " ";
+  temp +=  "21";
+  temp += ':';
+  temp += "45";
+  temp += ':';
+  temp += "10";
 
   return temp;
 

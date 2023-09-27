@@ -139,7 +139,7 @@ String readDataFile(fs::FS &fs, String path);
 Servo valveServo;                               // Create servo object
 OneWire oneWire(temperaturePin);                // Create a OneWire object for the temperature sensor
 DallasTemperature temperatureSensor(&oneWire);  // Create a DallasTemperature object by using the DallasTemperature library
-RTC_DS3231 rtc;                                 // Create an RTC object
+//RTC_DS3231 rtc;                                 // Create an RTC object
 
 
 
@@ -162,7 +162,7 @@ void setup() {
   Wire.begin();             // Start the I2C communication
 
 
-  if (! rtc.begin()) {
+ /* if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
     while (1);
   }
@@ -170,7 +170,7 @@ void setup() {
    // Serial.println("RTC lost power, lets set the time!");
     
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  }
+  }*/
 
   //Print boot cycle number and the wakeup reason
  // Serial.println("Boot number: " + String(bootCycleCount));
@@ -1393,7 +1393,7 @@ void renameFile(fs::FS &fs, String path1, String path2){
 
 String getTime(){
   String temp = "";
-  DateTime now = rtc.now();
+  /*DateTime now = rtc.now();
   
 
   temp += now.year(); 
@@ -1407,6 +1407,21 @@ String getTime(){
   temp += now.minute();
   temp += ':';
   temp += now.second();
+*/
+
+
+
+  temp += "2023"; 
+  temp += '/';
+  temp += "09";
+  temp += '/';
+  temp += "25";
+  temp += " ";
+  temp +=  "21";
+  temp += ':';
+  temp += "45";
+  temp += ':';
+  temp += "10";
 
   return temp;
 
