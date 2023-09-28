@@ -20,6 +20,7 @@ namespace Water_Sampler_GUI
         private bool _received = false;
         private Form_Welcome _formWelcome;
         private string textFileName;
+        public static int waitForResponse = 10;
         public Form_Data(Form_Welcome formWelcome)
         {
             InitializeComponent();
@@ -48,7 +49,7 @@ namespace Water_Sampler_GUI
             _receivedData = null;
             _formWelcome.SerialPortInstance.DataReceived += SerialPort_DataReceived;
 
-            bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(3));
+            bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(waitForResponse));
 
             _formWelcome.SerialPortInstance.DataReceived -= SerialPort_DataReceived;
 
@@ -118,7 +119,7 @@ namespace Water_Sampler_GUI
             _receivedData = null;
             _formWelcome.SerialPortInstance.DataReceived += SerialPort_DataReceived;
 
-            bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(3));
+            bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(waitForResponse));
 
             _formWelcome.SerialPortInstance.DataReceived -= SerialPort_DataReceived;
 

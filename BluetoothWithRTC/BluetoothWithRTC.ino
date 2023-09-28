@@ -180,6 +180,7 @@ void flushSystem();
 void collectMeasurements();
 void storeSample();
 void moveServo(byte pinNumber, byte position, byte delayBetween);
+void saveMeasurementsToSD();
 
 String readDataFile(fs::FS &fs, String path);
 byte getFlushPortPos();
@@ -294,6 +295,9 @@ void setup() {
   Serial.println(turbCoefA);
   Serial.println(turbCoefB);
   Serial.println(turbCoefC);*/
+
+  sampleCount = 2;
+  sampleCurrent = 1;
 }
 
 
@@ -306,16 +310,14 @@ void setup() {
 void loop() {
 
   timeNow = millis();
-  sampleCount = 0;
-  sampleCurrent = 1;
-  collectionMode();
+
+  //collectionMode();
   // put your main code here, to run repeatedly:
 
   // Update stateSwitchMode here
 
 
-
-  /*  stateSwitchModePrev = stateSwitchMode;
+  stateSwitchModePrev = stateSwitchMode;
   stateSwitchMode = digitalRead(pinSwitchMode);
 
   if (stateSwitchModePrev != stateSwitchMode) {
@@ -332,7 +334,7 @@ void loop() {
       collectionMode();
     }
     
-  }*/
+  }
 }
 
 void collectionMode() {
@@ -351,33 +353,36 @@ void collectionMode() {
         flushSystem();
         break;
       case 2:
+        sdCardCheckDuringLoop();
         collectMeasurements();
         break;
       case 3:
         storeSample();
         break;
       case 4:
+        Serial.print("Sample number ");
+        Serial.print(sampleCurrent);
+        Serial.println(" completed");
         sampleCurrent++;
-        operateStepNumber++;
+        operateStepNumber = 1;
+
+        // Start sleep with interval delay...............................................
+
+
+
+
         break;
     }
 
+  } else {
 
+    digitalWrite(relayPower, LOW);
 
-
-
-
-  } 
-
-  //if((operateStepNumber == 5) || ((sampleCurrent > sampleCount))){
-  if(operateStepNumber == 5){
-
-      // start deep sleep here...
-      Serial.println("Start deep Sleep..........");
-      delay(1000);
+    // Start indefinite sleep cycle here
+    Serial.println("Starting indefinite deep sleep");
+    deepSleepSetup(-1);
+    startDeepSleep();
   }
-
-  
 }
 
 void flushSystem() {
@@ -438,10 +443,10 @@ void flushSystem() {
 
 void collectMeasurements() {
 
-  if (measureStepNumber == 1){
+  if (measureStepNumber == 1) {
     moveServo(servoPumpPin, servoPumpOpenPos, 30);
     measureStepNumber++;
-  } 
+  }
   if (measureStepNumber == 2) {
     digitalWrite(relayPump, HIGH);
     timeNow = millis();
@@ -457,76 +462,88 @@ void collectMeasurements() {
   if (measureStepNumber == 4) {
     moveServo(servoPumpPin, servoPumpClosePos, 30);
     measureStepNumber++;
-  }  
+  }
   if (measureStepNumber == 5) {
     timeOfSample = getTime();
     measureStepNumber++;
     turbiditySum = 0;
     temperatureSum = 0;
   }
-  if (measureStepNumber == 6){
+  if (measureStepNumber == 6) {
 
-    if (readingDone == 0){
-    
+    if (readingDone == 0) {
+
       turbiditySum += getTurbidity();
-    //  Serial.print("Turbidity: ");
-    //  Serial.println(readingNumberNow);
+      //  Serial.print("Turbidity: ");
+      //  Serial.println(readingNumberNow);
       readingNumberNow++;
-      if (readingNumberNow >= numberOfReadings){
+      if (readingNumberNow >= numberOfReadings) {
         readingDone = 1;
-        turbidityReading = (float)(turbiditySum/numberOfReadings);
+        turbidityReading = (float)(turbiditySum / numberOfReadings);
         measureStepNumber++;
         readingNumberNow = 0;
         readingDone = 0;
-      } else{
-      delay(delayBetweenReadings);
+      } else {
+        delay(delayBetweenReadings);
       }
     }
-    
-    
-    
   }
- if (measureStepNumber == 7){
+  if (measureStepNumber == 7) {
 
-    if (readingDone == 0){
-    
+    if (readingDone == 0) {
+
       temperatureSum += getTemperature();
-    //  Serial.print("Temperature: ");
-    //  Serial.println(readingNumberNow);
+      //  Serial.print("Temperature: ");
+      //  Serial.println(readingNumberNow);
       readingNumberNow++;
-      if (readingNumberNow >= numberOfReadings){
+      if (readingNumberNow >= numberOfReadings) {
         readingDone = 1;
-        temperatureReading = (float)(temperatureSum/numberOfReadings);
+        temperatureReading = (float)(temperatureSum / numberOfReadings);
         measureStepNumber++;
-         readingDone = 0;
-    readingNumberNow = 0;
-      } else{
-      delay(delayBetweenReadings);
+        readingDone = 0;
+        readingNumberNow = 0;
+      } else {
+        delay(delayBetweenReadings);
       }
     }
-   
-   
   }
-   if (measureStepNumber == 8){
+  if (measureStepNumber == 8) {
 
     // Save to SD Card................................................................................................................................................
 
+
+    Serial.println("Saving to SD card");
+    if (sdInit) {
+    Serial.println("Init = True");
+      saveMeasurementsToSD();
+    Serial.println("Saved");
+    } else if (!sdInit && sdCardDetected) {
+    Serial.println("not init and detected");
+      initSDCard();
+      if (sdInit) {
+    Serial.println("not init and detected, but now init");
+        saveMeasurementsToSD();
+      }
+    }
+
+    Serial.println("done saving...");
+
     measureStepNumber++;
-  } 
-  if (measureStepNumber == 9){
+  }
+  if (measureStepNumber == 9) {
     moveServo(servoSumpPin, servoSumpOpenPos, 30);
     measureStepNumber++;
   }
-  if (measureStepNumber == 10){
+  if (measureStepNumber == 10) {
     operateStepNumber++;
     measureStepNumber = 1;
     Serial.println("On to storing.....");
-  }    
+  }
 }
 
 void storeSample() {
 
-  if (storingStepNumber == 1){
+  if (storingStepNumber == 1) {
     moveServo(servoValvePin, getStoragePortPos(), 0);
     moveServo(servoPumpPin, servoPumpOpenPos, 30);
     storingStepNumber++;
@@ -551,6 +568,18 @@ void storeSample() {
     operateStepNumber++;
     storingStepNumber = 1;
   }
+}
+
+void saveMeasurementsToSD(){
+      sdDataWrite = sampleCurrent;
+      sdDataWrite += ",";
+      sdDataWrite += getTime();
+      sdDataWrite += ",";
+      sdDataWrite += turbidityReading;
+      sdDataWrite += ",";
+      sdDataWrite += temperatureReading;
+      sdDataWrite += "\n";
+      appendFile(SD, fileNameData, sdDataWrite.c_str());
 }
 
 void moveServo(byte pinNumber, byte position, byte delayBetween) {
@@ -1091,7 +1120,7 @@ void sdCardCheckDuringLoop() {
       interval = 1000;
       sdInit = 0;
       sampleCurrent = 1;
-      sampleCount = 0;
+      sampleCount = 1;
     }
   }
   sdCardDetectedPrev = sdCardDetected;

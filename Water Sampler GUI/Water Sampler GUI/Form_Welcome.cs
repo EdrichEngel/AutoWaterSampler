@@ -16,6 +16,7 @@ namespace Water_Sampler_GUI
 
         public SerialPort SerialPortInstance { get; private set; }
         public static bool bConnected;
+        public static int waitForResponse = 10;
 
         public Form_Welcome()
         {

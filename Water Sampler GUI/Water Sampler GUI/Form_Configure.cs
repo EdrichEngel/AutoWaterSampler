@@ -19,7 +19,7 @@ namespace Water_Sampler_GUI
         private Form_Welcome _formWelcome;
         private string _receivedData;
         private bool _received = false;
-
+        public static int waitForResponse = 10;
         public Form_Configure(Form_Welcome formWelcome)
         {
             InitializeComponent();
@@ -56,7 +56,7 @@ namespace Water_Sampler_GUI
             _formWelcome.SerialPortInstance.DataReceived += SerialPort_DataReceived;
 
             // Wait for input for 3 seconds
-            bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(3));
+            bool success = SpinWait.SpinUntil(() => _receivedData != null, TimeSpan.FromSeconds(waitForResponse));
 
             _formWelcome.SerialPortInstance.DataReceived -= SerialPort_DataReceived;
 
