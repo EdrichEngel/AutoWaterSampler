@@ -80,6 +80,7 @@ bool delayFlag = 0;
 bool fileCreatedOnStartup = 1;
 bool failedToReadFile = 0;
 bool serialDataReceivedState = false;
+bool rtcConnected = true;
 
 byte stateSwitchMode = 0;
 byte stateSwitchModePrev = 0;
@@ -99,7 +100,6 @@ int operateStepNumber = 1;
 int flushStepNumber = 1;
 int measureStepNumber = 1;
 int storingStepNumber = 1;
-
 unsigned long timeNow = millis();
 unsigned long timePrev = millis();
 
@@ -219,15 +219,17 @@ void setup() {
 
   if (!rtc.begin()) {
     Serial.println("Couldn't find RTC");
-    while (1)
-      ;
+    rtcConnected = false;
+  } else{
+    rtcConnected = true;
   }
-  if (rtc.lostPower()) {
-    // Serial.println("RTC lost power, lets set the time!");
+  if (rtcConnected){
+    if (rtc.lostPower()) {
+      // Serial.println("RTC lost power, lets set the time!");
 
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+      rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    }
   }
-
   //Print boot cycle number and the wakeup reason
   // Serial.println("Boot number: " + String(bootCycleCount));
   print_wakeup_reason();
@@ -1724,8 +1726,21 @@ void renameFile(fs::FS &fs, String path1, String path2) {
 
 String getTime() {
   String temp = "";
-  DateTime now = rtc.now();
-  /*
+  if (rtcConnected){
+    DateTime now = rtc.now();
+      temp += now.year();
+      temp += '/';
+      temp += now.month();
+      temp += '/';
+      temp += now.day();
+      temp += " ";
+      temp += now.hour();
+      temp += ':';
+      temp += now.minute();
+      temp += ':';
+      temp += now.second();
+  } else{
+  
 
 
 
@@ -1740,19 +1755,9 @@ String getTime() {
   temp += "45";
   temp += ':';
   temp += "10";
-  */
+  }
 
-  temp += now.year();
-  temp += '/';
-  temp += now.month();
-  temp += '/';
-  temp += now.day();
-  temp += " ";
-  temp += now.hour();
-  temp += ':';
-  temp += now.minute();
-  temp += ':';
-  temp += now.second();
+
 
   return temp;
 }
